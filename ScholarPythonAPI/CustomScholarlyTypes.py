@@ -214,7 +214,9 @@ class SimplifiedAuthor(SimplifiedCoauthor):
 
         # Casting the publications to SimplifiedPublication objects if they exist and are of type list
         if 'publications' in author and isinstance(author['publications'], list):
-            self.publications = [SimplifiedPublication(pub) for pub in author['publications']]
+            self.publications = [SimplifiedPublication(author['publications'][0])]
+            # TODO : Remove line above and uncomment the line below before release
+            # self.publications = [SimplifiedPublication(pub) for pub in author['publications']]
 
         # Casting the coauthors to SimplifiedCoauthor objects if they exist and are of type list
         if 'coauthors' in author and isinstance(author['coauthors'], list):
