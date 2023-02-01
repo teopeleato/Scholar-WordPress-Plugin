@@ -1,13 +1,17 @@
 <?php # -*- coding: utf-8 -*-
-/* Plugin Name: Scholar Scrapper */
+/*
+ * Plugin Name: Scholar Scrapper
+ * Description: A plugin for scraping Google Scholar articles.
+ * Version: 1.0
+ * Author: Guillaume ELAMBERT <guillaume.elambert@yahoo.fr>
+ * Author URI: https://elambert-guillau.me
+ * Text Domain: scholar-scrapper
+ */
 
 defined('ABSPATH') || exit;
 
-define("PLUGIN_PATH", __DIR__ . "/");
+// TODO : CLEAN THIS FILE
 
-const PYTHON_PATH = "/Users/guillaume/.pyenv/shims/python";
-
-add_shortcode('scholar_scrapper', 'scholar_scrapper');
 function scholar_scrapper($attributes)
 {
     global $wpdb;
@@ -28,6 +32,7 @@ function scholar_scrapper($attributes)
 
     $metaValues = "";
     $res = "";
+    $ret_var = -1;
 
     # Creating a string with all the scholar users id separated by a space
     foreach ($scholarUsers as $scholarUser) {
@@ -37,22 +42,36 @@ function scholar_scrapper($attributes)
     foreach (FUNCTION_TYPE::cases() as $functionType) {
         list($res, $ret_var) = run_bash_command(PYTHON_PATH . " " . __DIR__ . '/' . $data['file'] . ' ' . $metaValues . ' 2>&1', $functionType);
 
-        var_dump($res);
-        var_dump($ret_var);
-
+        # Check if the command was executed successfully, if so, break the loop
         if ($ret_var == 0) break;
+
+        # Print the error message in the log.txt file
+        $logFile = fopen(PLUGIN_PATH . "log.txt", "a");
+        # Format the error message with the current date, function type and the error message
+        $log = sprintf("%s ERROR :\t%-10s\t%s (%d)\n", date("Y-m-d H:i:s"), $functionType, trim($res), $ret_var);
+        // $res = date("Y-m-d H:i:s") . " Error : " . $functionType . " - " . $res . "(". $ret_var . ")" . PHP_EOL;
+        fwrite($logFile, $log);
+        fclose($logFile);
     }
+
+    if ($ret_var != 0) {
+        return "Error : " . $res;
+    }
+
+    // Parse the result to get the JSON
+    //$res = json_decode($res, true);
+    //var_dump($res);
 
     return $res;
 }
 
 abstract class FUNCTION_TYPE
 {
-    const EXEC = 1;
-    const SHELL_EXEC = 2;
-    const SYSTEM = 3;
-    const PASSTHRU = 4;
-    const POPEN = 5;
+    const EXEC = "exec";
+    const SHELL_EXEC = "shell_exec";
+    const SYSTEM = "system";
+    const PASSTHRU = "passthru";
+    const POPEN = "popen";
 
     public static function cases()
     {
@@ -116,3 +135,7 @@ function run_bash_command($command, $function = FUNCTION_TYPE::EXEC): array
         return array($res, $ret_var);
     }
 }
+
+
+
+
