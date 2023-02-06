@@ -1,6 +1,6 @@
 <?php
 
-add_filter( 'cron_schedules', 'scholar_scraper_custom_cron_interval' );
+add_filter( 'cron_schedules', 'scholar_scraper_add_custom_cron_intervals' );
 
 /**
  * Ajoute une liste de fréquences personnalisées à la liste des fréquences de WordPress.
@@ -9,7 +9,7 @@ add_filter( 'cron_schedules', 'scholar_scraper_custom_cron_interval' );
  *
  * @return array La liste des fréquences de WordPress avec les fréquences personnalisées.
  */
-function scholar_scraper_custom_cron_interval( array $schedules = [] ): array {
+function scholar_scraper_add_custom_cron_intervals( array $schedules = [] ): array {
 	if ( empty( CUSTOM_CRON_FREQUENCIES ) ) {
 		return $schedules;
 	}
@@ -42,6 +42,11 @@ function scholar_scraper_custom_cron_interval( array $schedules = [] ): array {
 
 		$schedules[ $frequency ] = $data;
 	}
+
+	// On trie le tableau par intervalle croissant
+	uasort( $schedules, function ( $a, $b ) {
+		return $a['interval'] <=> $b['interval'];
+	} );
 
 	return $schedules;
 }
@@ -98,7 +103,7 @@ function scholar_scraper_unschedule_event(): mixed {
 /**
  * Met à jour la fréquence de l'événement cron.
  *
- * @param string|null $new_frequency La nouvelle fréquence de l'événement cron. Si null, la valeur enregistrée sera utilisée.
+ * @param string|null $new_frequency La nouvelle fréquence de l'événement cron : une clé de wp_get_schedules() ou un entier. Si null, la valeur enregistrée sera utilisée.
  *
  * @return mixed Le résultat de la fonction scholar_scraper_schedule_event().
  */
@@ -109,7 +114,13 @@ function scholar_scraper_update_schedule_event( string $new_frequency = null, st
 		$new_frequency = scholar_scraper_get_setting_value( 'CRON_FREQUENCY' );
 	}
 
-	$new_interval = wp_get_schedules()[ $new_frequency ]['interval'];
+	if ( is_numeric( $new_frequency ) ) {
+		$new_interval = (int) $new_frequency;
+	} else if ( array_key_exists( $new_frequency, wp_get_schedules() ) ) {
+		$new_interval = wp_get_schedules()[ $new_frequency ]['interval'];
+	} else {
+		return false;
+	}
 
 	// Si pas de timestamp de début, on calcule le timestamp de début en fonction de l'heure actuelle et de la fréquence
 	if ( empty( $startingTime ) || ! is_numeric( $startingTime ) ) {

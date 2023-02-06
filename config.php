@@ -12,6 +12,12 @@ define( 'PLUGIN_PATH', __DIR__ . '/' );
 
 
 /**
+ * URL vers le dossier du plugin.
+ */
+define( 'PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+
+
+/**
  * Nom du plugin.
  */
 define( 'PLUGIN_NAME', 'Scholar Scraper' );
@@ -24,11 +30,41 @@ define( 'PLUGIN_SLUG', str_replace( ' ', '_', strtolower( PLUGIN_NAME ) ) );
 
 
 /**
+ * Icône du plugin en base 64.
+ */
+define( 'PLUGIN_ICON_BASE64', 'data:image/svg+xml;base64,' . base64_encode( file_get_contents( PLUGIN_PATH . 'assets/img/google-scholar.svg' ) ) );
+
+/**
+ * Icône du plugin, acronyme faisant référence à la Dashicons introduite par le plugin dans WordPress.
+ */
+define( 'PLUGIN_ICON', 'dashicons-google-scholar' );
+
+
+/**
  * Nom des paramètres du plugin en base de données.
  */
 define( 'OPTION_GROUP', PLUGIN_SLUG . '_settings' );
 
 
+/**
+ * Define how many papers are displayed by default.
+ */
+define( 'DEFAULT_NUMBER_OF_PAPERS_TO_SHOW', 10 );
+
+
+/**
+ * Default field to sort papers by.
+ */
+define( 'DEFAULT_SORT_FIELD', 'pub_year' );
+
+/**
+ * Default sort order.
+ */
+define( 'DEFAULT_SORT_DIRECTION', 'desc' );
+
+/**
+ * Fréquences de cron personnalisées.
+ */
 define( 'CUSTOM_CRON_FREQUENCIES',
 	[
 		'5min'  => [
@@ -52,7 +88,7 @@ define( 'CUSTOM_CRON_FREQUENCIES',
 
 
 // On s'assure que les intervals de cron personnalisés sont bien enregistrés
-if ( ! function_exists( 'scholar_scraper_custom_cron_interval' ) ) {
+if ( ! function_exists( 'scholar_scraper_add_custom_cron_intervals' ) ) {
 	require_once PLUGIN_PATH . 'src/Scheduling.php';
 }
 
@@ -104,17 +140,38 @@ define( 'PLUGIN_SETTINGS',
  */
 define( 'PYTHON_SCRIPT_PATH', PLUGIN_PATH . 'ScholarPythonAPI/__init__.py' );
 
+
 /**
  * Chemin vers le fichier de dépendances du script Python.
  */
 define( 'PYTHON_REQUIREMENTS_PATH', PLUGIN_PATH . 'ScholarPythonAPI/requirements.txt' );
+
 
 /**
  * Nom de l'action qui permet de lancer le script Python.
  */
 define( 'CRON_HOOK_NAME', 'scholar_scraper_cron_hook' );
 
+
 /**
  * Heure de début du cron. (Format: HH:MM:SS)
  */
 define( 'STARTING_CRON_TIME', '00:00:00' );
+
+
+/**
+ * Fichier de log.
+ */
+define( 'LOG_FILE', PLUGIN_PATH . 'log.txt' );
+
+
+/**
+ * Chemin vers le fichier de résultats.
+ */
+define( 'RESULTS_FILE', PLUGIN_PATH . 'results.json' );
+
+
+/**
+ * Chemin vers le fichier de résultats sérialisé.
+ */
+define( 'SERIALIZED_RESULTS_FILE', PLUGIN_PATH . 'results.ser' );

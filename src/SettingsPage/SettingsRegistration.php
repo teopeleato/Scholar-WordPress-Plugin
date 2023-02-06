@@ -186,13 +186,14 @@ function scholar_scraper_sanitize_path_field( string $settingAcronym, string $in
 
 	// Nettoie le champ correspondant à l'acronyme :
 	// - Vérifie que le fichier existe (pas un dossier et accessible en lecture)
-	if ( ! is_file( $input ) ) {
+	if ( ! file_exists( $input ) ) {
 
-		// Entrée : Le fichier n'existe pas ou n'est pas accessible (manque de droits)
-		if ( ! file_exists( $input ) ) {
+		// Entrée : Le chemin amène à un dossier
+		if ( ! is_file( $input ) ) {
+
 			scholar_scraper_add_setting_error(
 				$settingAcronym,
-				sprintf( '"%s" file does not exist or can not be opened due to restrictions', $input )
+				sprintf( '"%s" is not a file', $input )
 			);
 
 			return $toReturnError;
@@ -200,7 +201,7 @@ function scholar_scraper_sanitize_path_field( string $settingAcronym, string $in
 
 		scholar_scraper_add_setting_error(
 			$settingAcronym,
-			sprintf( '"%s" is not a file', $input )
+			sprintf( '"%s" file does not exist or can not be opened due to restrictions', $input )
 		);
 
 		return $toReturnError;
@@ -213,6 +214,13 @@ function scholar_scraper_sanitize_path_field( string $settingAcronym, string $in
 		scholar_scraper_add_setting_error(
 			$settingAcronym,
 			sprintf( '"%s" file is not executable', $input )
+		);
+
+		return $toReturnError;
+	} elseif ( ! $isExecutable && ! is_readable( $input ) ) {
+		scholar_scraper_add_setting_error(
+			$settingAcronym,
+			sprintf( '"%s" file is not readable', $input )
 		);
 
 		return $toReturnError;

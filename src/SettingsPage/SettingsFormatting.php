@@ -112,7 +112,7 @@ function scholar_scraper_html_input_field( string $settingName, string $type, st
 		$id = $settingName;
 	}
 
-	if ( is_null( $placeholder ) ) {
+	if ( ! isset( $placeholder ) ) {
 		$placeholder = '';
 	}
 

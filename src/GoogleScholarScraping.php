@@ -1,13 +1,21 @@
 <?php
 
+use Model\ScholarAuthor;
+use Model\ScholarAuthorCollection;
+use Model\ScholarPublication;
+use Model\ScholarPublicationCollection;
+
+add_action( CRON_HOOK_NAME, 'scholar_scraper_start_scraping', 10, 0 );
+
+
 /**
  * Fonction permettant d'installer les dépendances du script python.
  * @return bool True si l'installation s'est bien déroulée, false sinon.
  */
-function scholar_scraper_install_requirements() {
+function scholar_scraper_install_requirements(): bool {
 
 	// On vérifie que le fichier requirements.txt existe
-	if ( ! file_exists( PYTHON_REQUIREMENTS_PATH ) ) {
+	if ( ! is_file( PYTHON_REQUIREMENTS_PATH ) || ! is_readable( PYTHON_REQUIREMENTS_PATH ) ) {
 		return false;
 	}
 
@@ -33,10 +41,11 @@ function scholar_scraper_install_requirements() {
  * Fonction permettant d'exécuter le script python qui récupère les données de Google Scholar.
  *
  * @return mixed|string
+ * @throws ReflectionException
  */
 function scholar_scraper_start_scraping() {
 	// On vérifie que le script python existe
-	if ( ! file_exists( PYTHON_SCRIPT_PATH ) ) {
+	if ( ! is_file( PYTHON_SCRIPT_PATH ) || ! is_readable( PYTHON_SCRIPT_PATH ) ) {
 		return "";
 	}
 
@@ -63,6 +72,8 @@ function scholar_scraper_start_scraping() {
 		return "";
 	}
 
+	$scraperArguments = "";
+
 	# Creating a string with all the scholar users id separated by a space
 	foreach ( $scholarUsers as $scholarUser ) {
 		$scraperArguments .= $scholarUser . " ";
@@ -85,17 +96,209 @@ function scholar_scraper_start_scraping() {
 	}
 
 	// On écrit le résultat dans un fichier
-	$resFile = fopen( PLUGIN_PATH . "result.txt", "w" );
-	fwrite( $resFile, $res );
-	fclose( $resFile );
+	scholar_scrapper_write_in_file( RESULTS_FILE, $res, false );
 
-	//TODO: Parse the result to get the JSON and insert it into the database
+	// On décode le résultat en objets PHP
+	$decodedRes = scholar_scraper_decode_results( $res );
 
-	// Parse the result to get the JSON
-	//$res = json_decode($res, true);
-	//var_dump($res);
+	// On serialise le résultat
+	$serialized = serialize( $decodedRes );
+
+	// On écrit le résultat sérialisé dans un fichier
+	scholar_scrapper_write_in_file( SERIALIZED_RESULTS_FILE, $serialized, false );
 
 	return $res;
 }
 
-add_action( CRON_HOOK_NAME, 'scholar_scraper_start_scraping', 10, 0 );
+
+/**
+ * Fonction permettant d'afficher le résultat de l'exécution du script python.
+ *
+ * @param mixed $atts Les attributs du shortcode.
+ *
+ * @return string Le résultat de l'exécution du script python.
+ * @throws ReflectionException
+ */
+function scholar_scraper_display_result( mixed $atts ): string {
+
+	//echo "<pre>" . print_r( $atts, true ) . "</pre>";
+
+	// Get the attributes passed to the shortcode
+	$atts = shortcode_atts(
+		array(
+			'number_papers_to_show' => DEFAULT_NUMBER_OF_PAPERS_TO_SHOW,
+			'sort_by_field'         => DEFAULT_SORT_FIELD,
+			'sort_by_direction'     => 'desc',
+		),
+		$atts,
+		'scholar_scraper'
+	);
+
+	foreach ( $atts as $key => $value ) {
+		if ( is_null( $value ) ) {
+			continue;
+		}
+
+		$atts[ $key ] = html_entity_decode( $value );
+	}
+
+	// On vérifie que l'attribut number_papers_to_show est bien un nombre
+	if ( ! is_numeric( trim( $atts['number_papers_to_show'] ) ) ) {
+		$atts['number_papers_to_show'] = DEFAULT_NUMBER_OF_PAPERS_TO_SHOW;
+	}
+
+	// On récupère le nombre de publications à afficher
+	$nbPapersToShow = ( (int) $atts['number_papers_to_show'] ) - 1;
+
+
+	// On vérifie que l'attribut sort_by_field est bien un champ de la classe ScholarPublication
+	$posibleSortFields = ScholarPublication::get_non_array_fields();
+	if ( ! array_key_exists( strtolower( trim( $atts['sort_by_field'] ) ), $posibleSortFields ) ) {
+		$atts['sort_by_field'] = DEFAULT_SORT_FIELD;
+	}
+
+	$sortField = $atts['sort_by_field'];
+
+
+	// On vérifie que l'attribut sort_by_direction est bien une direction de tri possible
+	$posibleSortDirections = array( 'asc', 'desc' );
+	if ( ! in_array( strtolower( trim( $atts['sort_by_direction'] ) ), $posibleSortDirections ) ) {
+		$atts['sort_by_direction'] = DEFAULT_SORT_DIRECTION;
+	}
+
+	$sortDirection = $atts['sort_by_direction'];
+
+
+	// Entrée : le fichier contenant les résultats sérialisés n'existe pas ou n'est pas lisible
+	//       => On essaie de voir si le fichier contenant les résultats non sérialisés existe et est lisible
+	if ( ! is_file( SERIALIZED_RESULTS_FILE ) || ! is_readable( SERIALIZED_RESULTS_FILE ) ) {
+
+		// Entrée : le fichier contenant les résultats non sérialisés n'existe pas ou n'est pas lisible
+		//       => On affiche un message d'erreur
+		if ( ! is_file( RESULTS_FILE ) || ! is_readable( RESULTS_FILE ) ) {
+			return "<p>Unfortunately, our researchers are currently on vacation...<br/>Please try again later.</p>";
+		}
+
+		$res = file_get_contents( RESULTS_FILE );
+
+		// On décode le résultat en objets PHP
+		$decodedRes = scholar_scraper_decode_results( $res );
+
+		// On serialise le résultat
+		$serialized = serialize( $decodedRes );
+
+		// On écrit le résultat sérialisé dans un fichier
+		scholar_scrapper_write_in_file( SERIALIZED_RESULTS_FILE, $serialized, false );
+
+	}
+
+	// Get the content of the result file
+	$res                           = file_get_contents( SERIALIZED_RESULTS_FILE );
+	$res                           = unserialize( $res );
+	$scholarPublicationsCollection = new ScholarPublicationCollection();
+
+	// Add all the publications of all the users to the collection
+	foreach ( $res as $scholarUser ) {
+		$scholarPublicationsCollection->add( ...$scholarUser->publications->values() );
+	}
+
+	$totalPapers = $scholarPublicationsCollection->count();
+
+	// Order the publications by $atts['sort_by_field']. If the field is the same, the alphabetical order is used on title.
+	// If the $atts['sort_by_field'] is not set, the publication is put at the end of the list.
+	$scholarPublicationsCollection->usort( function ( $a, $b ) use ( $sortField, $sortDirection ): int {
+		if ( ! isset( $a ) || ! isset( $b ) ) {
+			return 0;
+		}
+
+		// Si les deux publications n'ont pas de valeur pour le champ de tri, on trie par ordre alphabétique sur le titre
+		if ( ! isset( $a->$sortField ) && ! isset( $b->$sortField ) ) {
+			// Tri alphabétique sur le titre en fonction de la direction de tri
+			if ( $sortDirection === 'desc' ) {
+				return strcmp( $b->title, $a->title );
+			}
+
+			return strcmp( $a->title, $b->title );
+		}
+
+
+		// Si la première publication n'a pas de valeur pour le champ de tri, on la met à la fin de la liste
+		if ( ! isset( $a->$sortField ) ) {
+			return 1;
+		}
+
+		// Si la deuxième publication n'a pas de valeur pour le champ de tri, on la met à la fin de la liste
+		if ( ! isset( $b->$sortField ) ) {
+			return - 1;
+		}
+
+		// Si les deux publications ont la même valeur pour le champ de tri, on trie par ordre alphabétique sur le titre
+		if ( $a->$sortField === $b->$sortField ) {
+			// Tri alphabétique sur le titre en fonction de la direction de tri
+			if ( $sortDirection === 'desc' ) {
+				return strcmp( $b->title, $a->title );
+			}
+
+			return strcmp( $a->title, $b->title );
+		}
+
+
+		// Tri en fonction de la direction de tri
+		if ( $sortDirection === 'desc' ) {
+			return $b->$sortField <=> $a->$sortField;
+		}
+
+		return $a->$sortField <=> $b->$sortField;
+	} );
+
+	// On affiche les publications
+	$toReturn = "<div class='scholar-scraper-publications'>";
+
+	for ( $i = 0; $i <= $nbPapersToShow && $i < $totalPapers; $i ++ ) {
+
+		$publication = $scholarPublicationsCollection->get( $i );
+		if ( ! isset( $publication ) || ! isset( $publication->title ) ) {
+			continue;
+		}
+
+		ob_start();
+		include( PLUGIN_PATH . 'src/Template/PublicationCardTemplate.php' );
+		$toReturn .= ob_get_clean();
+
+	}
+
+	$toReturn .= "</div>";
+
+	return $toReturn;
+}
+
+
+/**
+ * Fonction permettant de récupérer le résultat de l'exécution du script python.
+ *
+ * @return ScholarAuthorCollection Le résultat de l'exécution du script python : une collection d'auteurs.
+ *
+ * @throws ReflectionException
+ */
+function scholar_scraper_decode_results( string $results ): ScholarAuthorCollection {
+	$results = json_decode( $results, true );
+
+	$scholarUsers = new ScholarAuthorCollection();
+
+	foreach ( $results as $user ) {
+		$scholarUser = scholar_scraper_cast_object_to_class( $user, ScholarAuthor::class );
+
+		if ( ! isset( $scholarUser ) ) {
+			continue;
+		}
+
+		if ( $scholarUser->publications->isEmpty() ) {
+			continue;
+		}
+
+
+		$scholarUsers->add( $scholarUser );
+	}
+
+	return $scholarUsers;
+}

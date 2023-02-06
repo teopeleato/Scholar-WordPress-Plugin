@@ -14,7 +14,7 @@ abstract class FUNCTION_TYPE {
 	 * Retourne la liste des types de fonctions.
 	 * @return array La liste des types de fonctions.
 	 */
-	public static function cases() {
+	public static function cases(): array {
 		return array(
 			self::EXEC,
 			self::SHELL_EXEC,

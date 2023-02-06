@@ -63,6 +63,14 @@ function scholar_scraper_run_command( string $command, $function = FUNCTION_TYPE
 }
 
 
+/**
+ * Exécute une commande et retourne la sortie de la commande et le code de retour de la commande.
+ * Cette fonction essaie toutes les méthodes d'exécution de commande.
+ *
+ * @param $command string La commande à exécuter.
+ *
+ * @return array [0] => string La sortie de la commande, [1] => int Le code de retour de la commande.
+ */
 function scholar_scraper_run_command_try_all_methods( string $command ): array {
 	$res     = "";
 	$ret_var = - 1;
@@ -71,20 +79,41 @@ function scholar_scraper_run_command_try_all_methods( string $command ): array {
 		return [ $res, $ret_var ];
 	}
 
-	foreach ( FUNCTION_TYPE::cases() as $functionType ) {
+	$types = FUNCTION_TYPE::cases();
+
+	// Get the length of the biggest item in the array
+	$maxLength = max( array_map( 'strlen', $types ) ) + 3;
+
+	foreach ( $types as $functionType ) {
+
+		$log = sprintf( "%-{$maxLength}s %s",
+			$functionType,
+			str_replace( PHP_EOL, '', trim( $command ) ) // Trim and remove end of line characters
+		);
+		scholar_scraper_log( LOG_TYPE::INFO, $log );
+
 		list( $res, $ret_var ) = scholar_scraper_run_command(
 			$command,
 			$functionType );
 
 		# Check if the command was executed successfully, if so, break the loop
 		if ( $ret_var == 0 ) {
-			$log = sprintf( "%s SUCCESS :\t%-10s\t%s\n", date( "Y-m-d H:i:s" ), $functionType, str_replace( PHP_EOL, '', trim( $res ) ) );
-			scholar_scraper_log( $log );
+			$log = sprintf( "%-{$maxLength}s %s",
+				$functionType,
+				str_replace( PHP_EOL, '', trim( $command ) ) // Trim and remove end of line characters
+			);
+			scholar_scraper_log( LOG_TYPE::SUCCESS, $log );
 			break;
 		}
 
-		$log = sprintf( "%s ERROR :\t%-10s\t%s (returned : %d)\n", date( "Y-m-d H:i:s" ), $functionType, str_replace( PHP_EOL, '', ( $res ) ), $ret_var );
-		scholar_scraper_log( $log );
+		$log = sprintf(
+			"%-{$maxLength}s %s (returned : %d)\t%s",
+			$functionType,
+			str_replace( PHP_EOL, '', trim( $command ) ), // Trim and remove end of line characters
+			$ret_var,
+			str_replace( PHP_EOL, '', trim( $res ) ) // Trim and remove end of line characters
+		);
+		scholar_scraper_log( LOG_TYPE::ERROR, $log );
 	}
 
 	return [ $res, $ret_var ];

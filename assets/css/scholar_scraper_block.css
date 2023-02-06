@@ -1,0 +1,51 @@
+.wp-block-scholar-scraper-scholar-scraper-block {
+    border: black 2px solid;
+    border-radius: 15px;
+    padding: 10px 15px 15px 15px;
+}
+
+
+#scholar-scraper-block-hero,
+#scholar-scraper-block-icon {
+    width: fit-content;
+    margin: auto;
+}
+
+#scholar-scraper-block-icon > img {
+    margin: auto;
+    max-width: 100px;
+    height: auto;
+}
+
+#scholar-scraper-block-title {
+    text-align: center;
+    margin-top: 0;
+}
+
+#scholar-scraper-block-attributes {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    justify-items: end;
+    align-items: center;
+    grid-gap: 20px;
+    width: fit-content;
+    margin: auto;
+}
+
+/* Make all form elements (select, input,...) width 100% */
+#scholar-scraper-block-attributes > * {
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+#scholar-scraper-block-attributes > label {
+    width: fit-content !important;
+}
+
+#sort-by-container {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    justify-items: start;
+    align-items: center;
+    grid-gap: 10px;
+}

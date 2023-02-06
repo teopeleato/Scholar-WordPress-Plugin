@@ -1,0 +1,25 @@
+@font-face {
+    font-family: 'scholar scraper';
+    src: url('../fonts/scholar-scraper.eot');
+    src: url('../fonts/scholar-scraper.eot?#iefix') format('embedded-opentype'),
+    url('../fonts/scholar-scraper.woff') format('woff'),
+    url('../fonts/scholar-scraper.ttf') format('truetype'),
+    url('../fonts/scholar-scraper.svg#scholar-scraper') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.dashicons-google-scholar:before {
+    display: inline-block;
+    font-family: 'scholar scraper', serif;
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale
+}
+
+.dashicons-google-scholar:before {
+    content: '\0041';
+}
+
