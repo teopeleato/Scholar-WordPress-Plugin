@@ -3,6 +3,7 @@
 /**
  * Fonction pour afficher le formulaire de paramètres du plugin.
  * @return void
+ * @since 1.0.0
  */
 function scholar_scraper_display_settings_form() {
 	?>
@@ -28,6 +29,7 @@ function scholar_scraper_display_settings_form() {
  * Fonction pour afficher le champ de formulaire "Cron" à choix multiple
  *
  * @return void
+ * @since 1.0.0
  */
 function scholar_scraper_display_cron_field() {
 
@@ -48,14 +50,17 @@ function scholar_scraper_display_cron_field() {
 /**
  * Fonction pour afficher le champ de formulaire "Python Path"
  * @return void
+ * @since 1.0.0
  */
 function scholar_scraper_display_python_path_field() {
 	scholar_scraper_display_input_field( 'PYTHON_PATH' );
 }
 
+
 /**
  * Fonction pour afficher le champ de formulaire "Pip Path"
  * @return void
+ * @since 1.0.0
  */
 function scholar_scraper_display_pip_path_field() {
 	scholar_scraper_display_input_field( 'PIP_PATH' );
@@ -68,6 +73,7 @@ function scholar_scraper_display_pip_path_field() {
  * @param string $settingAcronym L'acronyme du paramètre à afficher.
  *
  * @return void
+ * @since 1.0.0
  */
 function scholar_scraper_display_input_field( string $settingAcronym, bool $withLabel = false ) {
 
@@ -103,6 +109,7 @@ function scholar_scraper_display_input_field( string $settingAcronym, bool $with
  * @param string|null $label Le label de l'input.
  *
  * @return string Le code HTML du champ de formulaire.
+ * @since 1.0.0
  */
 function scholar_scraper_html_input_field( string $settingName, string $type, string $pattern, string $value, string $placeholder = '', string $id = null, string $label = null ): string {
 

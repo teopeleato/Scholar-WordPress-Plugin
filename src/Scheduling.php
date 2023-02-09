@@ -8,6 +8,9 @@ add_filter( 'cron_schedules', 'scholar_scraper_add_custom_cron_intervals' );
  * @param $schedules array La liste des fréquences de WordPress.
  *
  * @return array La liste des fréquences de WordPress avec les fréquences personnalisées.
+ * @see https://developer.wordpress.org/reference/hooks/cron_schedules/
+ * @see https://developer.wordpress.org/reference/functions/wp_get_schedules/
+ * @since 1.0.0
  */
 function scholar_scraper_add_custom_cron_intervals( array $schedules = [] ): array {
 	if ( empty( CUSTOM_CRON_FREQUENCIES ) ) {
@@ -61,6 +64,8 @@ function scholar_scraper_add_custom_cron_intervals( array $schedules = [] ): arr
  * @param array $args Arguments à passer à l'action. Si vide, aucun argument ne sera passé.
  *
  * @return mixed Le résultat de la fonction wp_schedule_event().
+ * @see https://developer.wordpress.org/reference/functions/wp_schedule_event/
+ * @since 1.0.0
  */
 function scholar_scraper_schedule_event( string $startingTime = "", string $frequency = "", string $hook = CRON_HOOK_NAME, array $args = [] ): mixed {
 
@@ -76,8 +81,6 @@ function scholar_scraper_schedule_event( string $startingTime = "", string $freq
 
 	// Check if the event is scheduled
 	if ( wp_get_scheduled_event( CRON_HOOK_NAME ) ) {
-		error_log( 'Event is already scheduled' );
-
 		return false;
 	}
 
@@ -89,6 +92,8 @@ function scholar_scraper_schedule_event( string $startingTime = "", string $freq
  * Annule l'événement cron.
  *
  * @return mixed Le résultat de la fonction wp_clear_scheduled_hook().
+ * @see https://developer.wordpress.org/reference/functions/wp_clear_scheduled_hook/
+ * @since 1.0.0
  */
 function scholar_scraper_unschedule_event(): mixed {
 	// Check if the event is scheduled
@@ -103,9 +108,12 @@ function scholar_scraper_unschedule_event(): mixed {
 /**
  * Met à jour la fréquence de l'événement cron.
  *
- * @param string|null $new_frequency La nouvelle fréquence de l'événement cron : une clé de wp_get_schedules() ou un entier. Si null, la valeur enregistrée sera utilisée.
+ * @param string|null $new_frequency La nouvelle fréquence de l'événement cron : une clé de wp_get_schedules(). Si null, la valeur définie dans la configuration du plugin sera utilisée.
+ * @param string|null $startingTime Timestamp de début de l'événement cron. Si null, la valeur sera calculée en fonction de l'heure actuelle et da la configuration du plugin.
  *
  * @return mixed Le résultat de la fonction scholar_scraper_schedule_event().
+ * @see scholar_scraper_schedule_event()
+ * @since 1.0.0
  */
 function scholar_scraper_update_schedule_event( string $new_frequency = null, string $startingTime = null ): mixed {
 
@@ -114,20 +122,14 @@ function scholar_scraper_update_schedule_event( string $new_frequency = null, st
 		$new_frequency = scholar_scraper_get_setting_value( 'CRON_FREQUENCY' );
 	}
 
-	if ( is_numeric( $new_frequency ) ) {
-		$new_interval = (int) $new_frequency;
-	} else if ( array_key_exists( $new_frequency, wp_get_schedules() ) ) {
-		$new_interval = wp_get_schedules()[ $new_frequency ]['interval'];
-	} else {
-		return false;
-	}
+	$new_interval = scholar_scraper_get_schedule_interval( $new_frequency );
 
 	// Si pas de timestamp de début, on calcule le timestamp de début en fonction de l'heure actuelle et de la fréquence
 	if ( empty( $startingTime ) || ! is_numeric( $startingTime ) ) {
 		$startingTime = scholar_scraper_get_next_specific_timestamp(
 			"",
 			"",
-			scholar_scraper_get_schedule_interval( $new_frequency )
+			$new_interval
 		);
 	}
 
@@ -144,7 +146,8 @@ function scholar_scraper_update_schedule_event( string $new_frequency = null, st
  *
  * @param string $frequencyName
  *
- * @return int
+ * @return int L'intervalle de temps en secondes. 0 si la fréquence n'existe pas.
+ * @since 1.0.0
  */
 function scholar_scraper_get_schedule_interval( string $frequencyName = "" ): int {
 	// Si pas de fréquence, on récupère la valeur enregistrée

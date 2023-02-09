@@ -5,12 +5,15 @@ use Model\ScholarAuthorCollection;
 use Model\ScholarPublication;
 use Model\ScholarPublicationCollection;
 
+
+// Cron related actions
 add_action( CRON_HOOK_NAME, 'scholar_scraper_start_scraping', 10, 0 );
 
 
 /**
  * Fonction permettant d'installer les dépendances du script python.
  * @return bool True si l'installation s'est bien déroulée, false sinon.
+ * @since 1.0.0
  */
 function scholar_scraper_install_requirements(): bool {
 
@@ -40,35 +43,63 @@ function scholar_scraper_install_requirements(): bool {
 /**
  * Fonction permettant d'exécuter le script python qui récupère les données de Google Scholar.
  *
- * @return mixed|string
- * @throws ReflectionException
+ * @return mixed|string Le résultat de l'exécution du script python.
+ * @throws ReflectionException Si un problème survient lors de la création d'un objet.
+ * @since 1.0.0
  */
 function scholar_scraper_start_scraping() {
+
+	// Check if the cron is already executing
+	if ( get_transient( CRON_TRANSIENT ) ) {
+		scholar_scraper_log( LOG_TYPE::INFO, "Cron already executing." );
+
+		return false;
+	}
+
+	set_transient( CRON_TRANSIENT, true, CRON_TRANSIENT_RESET_AFTER );
+
 	// On vérifie que le script python existe
 	if ( ! is_file( PYTHON_SCRIPT_PATH ) || ! is_readable( PYTHON_SCRIPT_PATH ) ) {
+		delete_transient( CRON_TRANSIENT );
+		scholar_scraper_log( LOG_TYPE::ERROR, "Python script not found" );
+
 		return "";
 	}
 
 	// On vérifie que le chemin vers python est correct
 	$pythonPath = scholar_scraper_get_setting_value( 'PYTHON_PATH' );
 	if ( ! $pythonPath || ! is_executable( $pythonPath ) ) {
+		delete_transient( CRON_TRANSIENT );
+		scholar_scraper_log( LOG_TYPE::ERROR, "Python path not found" );
+
 		return "";
 	}
 
 	// On vérifié qu'on a bien accès à la base de données WordPress
 	global $wpdb;
 	if ( ! isset( $wpdb ) ) {
+		delete_transient( CRON_TRANSIENT );
+		scholar_scraper_log( LOG_TYPE::ERROR, "Database not found" );
+
 		return "";
 	}
 
 	// On s'assure que les dépendances Python sont bien installées
-	scholar_scraper_install_requirements();
+	if ( ! scholar_scraper_install_requirements() ) {
+		delete_transient( CRON_TRANSIENT );
+		scholar_scraper_log( LOG_TYPE::ERROR, "Python requirements not installed" );
+
+		return false;
+	}
 
 	# TODO: Get the scholar users id from the database
 	$scholarUsers = array( "1iQtvdsAAAAJ", "dAKCYJgAAAAJ" );
 
 	// On vérifie qu'on a bien récupéré des utilisateurs
 	if ( ! count( $scholarUsers ) ) {
+		delete_transient( CRON_TRANSIENT );
+		scholar_scraper_log( LOG_TYPE::ERROR, "No scholar users found" );
+
 		return "";
 	}
 
@@ -92,11 +123,13 @@ function scholar_scraper_start_scraping() {
 
 	// On vérifie que la commande s'est bien déroulée, sinon on sort de la fonction
 	if ( $ret_var != 0 ) {
+		delete_transient( CRON_TRANSIENT );
+
 		return "";
 	}
 
 	// On écrit le résultat dans un fichier
-	scholar_scrapper_write_in_file( RESULTS_FILE, $res, false );
+	scholar_scraper_write_in_file( RESULTS_FILE, $res, false );
 
 	// On décode le résultat en objets PHP
 	$decodedRes = scholar_scraper_decode_results( $res );
@@ -105,7 +138,10 @@ function scholar_scraper_start_scraping() {
 	$serialized = serialize( $decodedRes );
 
 	// On écrit le résultat sérialisé dans un fichier
-	scholar_scrapper_write_in_file( SERIALIZED_RESULTS_FILE, $serialized, false );
+	scholar_scraper_write_in_file( SERIALIZED_RESULTS_FILE, $serialized, false );
+
+
+	delete_transient( CRON_TRANSIENT );
 
 	return $res;
 }
@@ -117,7 +153,8 @@ function scholar_scraper_start_scraping() {
  * @param mixed $atts Les attributs du shortcode.
  *
  * @return string Le résultat de l'exécution du script python.
- * @throws ReflectionException
+ * @throws ReflectionException Si une erreur survient lors de la récupération des objets.
+ * @since 1.0.0
  */
 function scholar_scraper_display_result( mixed $atts ): string {
 
@@ -188,7 +225,7 @@ function scholar_scraper_display_result( mixed $atts ): string {
 		$serialized = serialize( $decodedRes );
 
 		// On écrit le résultat sérialisé dans un fichier
-		scholar_scrapper_write_in_file( SERIALIZED_RESULTS_FILE, $serialized, false );
+		scholar_scraper_write_in_file( SERIALIZED_RESULTS_FILE, $serialized, false );
 
 	}
 
@@ -278,7 +315,8 @@ function scholar_scraper_display_result( mixed $atts ): string {
  *
  * @return ScholarAuthorCollection Le résultat de l'exécution du script python : une collection d'auteurs.
  *
- * @throws ReflectionException
+ * @throws ReflectionException Si une erreur survient lors de la création d'un objet.
+ * @since 1.0.0
  */
 function scholar_scraper_decode_results( string $results ): ScholarAuthorCollection {
 	$results = json_decode( $results, true );

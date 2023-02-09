@@ -6,6 +6,7 @@
  * @param $function FUNCTION_TYPE Le type de fonction à utiliser pour exécuter la commande.
  *
  * @return array [0] => string La sortie de la commande, [1] => int Le code de retour de la commande.
+ * @since 1.0.0
  */
 function scholar_scraper_run_command( string $command, $function = FUNCTION_TYPE::EXEC ): array {
 
@@ -70,6 +71,7 @@ function scholar_scraper_run_command( string $command, $function = FUNCTION_TYPE
  * @param $command string La commande à exécuter.
  *
  * @return array [0] => string La sortie de la commande, [1] => int Le code de retour de la commande.
+ * @since 1.0.0
  */
 function scholar_scraper_run_command_try_all_methods( string $command ): array {
 	$res     = "";

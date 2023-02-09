@@ -2,6 +2,7 @@
 /**
  * Enregistre les paramètres du plugin.
  * @return void
+ * @since 1.0.0
  */
 function scholar_scraper_register_fields_settings(): void {
 	// On déclare le paramètre "Cron" pour le plugin
@@ -77,9 +78,10 @@ function scholar_scraper_register_fields_settings(): void {
  * Si le paramètre est de type select, la valeur par défaut est la première option.
  * Sinon, la valeur par défaut est celle définie dans le tableau PLUGIN_SETTINGS par le champ 'default'.
  *
- * @param $setting_acronym string Acronyme du paramètre dans le tableau PLUGIN_SETTINGS
+ * @param $setting_acronym string Acronyme du paramètre dans le tableau PLUGIN_SETTINGS.
  *
- * @return mixed|null Valeur par défaut du paramètre ou null si l'acronyme n'existe pas
+ * @return mixed|null Valeur par défaut du paramètre ou null si l'acronyme n'existe pas.
+ * @since 1.0.0
  */
 function scholar_scraper_get_default_value( string $setting_acronym ): mixed {
 	if ( ! isset( PLUGIN_SETTINGS[ $setting_acronym ] ) ) {
@@ -107,6 +109,7 @@ function scholar_scraper_get_default_value( string $setting_acronym ): mixed {
  * @param $input string La valeur du champ saisie par l'utilisateur
  *
  * @return string La valeur du champ nettoyée
+ * @since 1.0.0
  */
 function scholar_scraper_sanitize_cron_frequency( string $input ): string {
 
@@ -128,22 +131,25 @@ function scholar_scraper_sanitize_cron_frequency( string $input ): string {
 
 
 /**
- * Fonction de nettoyage du champs "Python Path"
+ * Fonction de nettoyage du champs "Python Path".
  *
- * @param $input string La valeur du champ saisie par l'utilisateur
+ * @param $input string La valeur du champ saisie par l'utilisateur.
  *
- * @return string La valeur du champ nettoyée
+ * @return string La valeur du champ nettoyée.
+ * @since 1.0.0
  */
 function scholar_scraper_sanitize_python_path_field( string $input ): string {
 	return scholar_scraper_sanitize_path_field( 'PYTHON_PATH', $input, true );
 }
 
+
 /**
- * Fonction de nettoyage du champs "Pip Path"
+ * Fonction de nettoyage du champs "Pip Path".
  *
- * @param $input string La valeur du champ saisie par l'utilisateur
+ * @param $input string La valeur du champ saisie par l'utilisateur.
  *
- * @return string La valeur du champ nettoyée
+ * @return string La valeur du champ nettoyée.
+ * @since 1.0.0
  */
 function scholar_scraper_sanitize_pip_path_field( string $input ): string {
 	return scholar_scraper_sanitize_path_field( 'PIP_PATH', $input, true );
@@ -157,6 +163,7 @@ function scholar_scraper_sanitize_pip_path_field( string $input ): string {
  * @param string $input La valeur du champ saisie par l'utilisateur.
  *
  * @return string|null La valeur du champ nettoyée. Null si le paramètre n'est pas un champ de formulaire.
+ * @since 1.0.0
  */
 function scholar_scraper_sanitize_path_field( string $settingAcronym, string $input, bool $isExecutable = false ): ?string {
 
@@ -239,6 +246,7 @@ function scholar_scraper_sanitize_path_field( string $settingAcronym, string $in
  * @param string|null $message Message d'erreur à afficher.
  *
  * @return void
+ * @since 1.0.0
  */
 function scholar_scraper_add_setting_error( string $settingAcronym, string $message = null ): void {
 	$fieldName = scholar_scraper_get_setting_name( $settingAcronym );

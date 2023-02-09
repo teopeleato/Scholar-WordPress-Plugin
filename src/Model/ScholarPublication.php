@@ -99,8 +99,8 @@ class ScholarPublication {
 	 *
 	 * @return array
 	 */
-	public static function get_non_array_fields() : array {
-		$reflection = new ReflectionClass( self::class );
+	public static function get_non_array_fields(): array {
+		$reflection          = new ReflectionClass( self::class );
 		$publications_fields = array_filter(
 			array_map(
 				function ( ReflectionProperty $property ): ?array {

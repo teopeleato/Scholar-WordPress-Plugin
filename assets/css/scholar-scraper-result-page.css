@@ -1,0 +1,65 @@
+.scholar-scraper-publications {
+    display: grid;
+    grid-template-columns: repeat(1, auto);
+    justify-items: start;
+    align-items: start;
+    grid-gap: 5rem;
+    margin: auto;
+    max-width: 95% !important;
+}
+
+
+@media screen and (min-width: 1001px) {
+    .scholar-scraper-publications {
+        width: calc(100% - 10rem) !important;
+    }
+}
+
+@media screen and (min-width: 1050px) {
+    .scholar-scraper-publications {
+        grid-template-columns: repeat(2, auto);
+        max-width: 90% !important;
+    }
+}
+
+
+.scholar-scraper-publication-card {
+    background: rgb(221 221 221 / 30%);
+    border-radius: 15px;
+    padding: 20px;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    /* Add shadows to create the "card" effect */
+    box-shadow: 0 8px 8px 0 rgb(0 0 0 / 0.2);
+    transition: 0.3s;
+}
+
+
+.scholar-scraper-publication-card:hover {
+    box-shadow: 0 10px 20px 0 rgb(0 0 0 / 0.3);
+}
+
+
+.scholar-scraper-publication-card > .scholar-scraper-publication-card-top > h3 {
+    margin-top: 0;
+}
+
+
+.wp-block-button.scholar-scraper-publication-card-link {
+    margin: 1rem auto !important;
+    width: fit-content;
+}
+
+.wp-block-button.scholar-scraper-publication-card-link > .wp-block-button__link {
+    box-shadow: 0 6px 8px 0 rgb(0 0 0 / 0.2);
+    transition: 0.25s;
+    text-decoration: none !important;
+}
+
+.wp-block-button.scholar-scraper-publication-card-link > .wp-block-button__link:hover {
+    box-shadow: 0 10px 10px 0 rgb(0 0 0 / 0.2);
+}

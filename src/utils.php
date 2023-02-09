@@ -5,6 +5,7 @@ use Model\GenericCollection;
 
 /**
  * Class des types de logs.
+ * @since 1.0.0
  */
 abstract class LOG_TYPE {
 	const INFO = "INFO";
@@ -25,6 +26,7 @@ abstract class LOG_TYPE {
  * Initialise les paramètres du plugin s'ils ne sont pas encore définis.
  *
  * @return void
+ * @since 1.0.0
  */
 function scholar_scraper_default_settings(): void {
 	foreach ( PLUGIN_SETTINGS as $setting_acronym => $setting ) {
@@ -40,6 +42,7 @@ function scholar_scraper_default_settings(): void {
  * @param string $setting_acronym Acronyme du paramètre.
  *
  * @return string Valeur du paramètre ou valeur par défaut si le paramètre n'est pas défini.
+ * @since 1.0.0
  */
 function scholar_scraper_get_setting_value( string $setting_acronym ) {
 	return get_option( PLUGIN_SETTINGS[ $setting_acronym ]['name'], scholar_scraper_get_default_value( $setting_acronym ) );
@@ -52,6 +55,7 @@ function scholar_scraper_get_setting_value( string $setting_acronym ) {
  * @param string $setting_acronym Acronyme du paramètre.
  *
  * @return string|null Nom du paramètre en BDD. Null si l'acronyme n'existe pas dans le tableau PLUGIN_SETTINGS.
+ * @since 1.0.0
  */
 function scholar_scraper_get_setting_name( string $setting_acronym ): ?string {
 	if ( ! isset( PLUGIN_SETTINGS[ $setting_acronym ] ) ) {
@@ -66,8 +70,9 @@ function scholar_scraper_get_setting_name( string $setting_acronym ): ?string {
  * Récupère les noms de tous les paramètres en BDD.
  *
  * @return array Tableau des noms de tous les paramètres en BDD.
+ * @since 1.0.0
  */
-function scholar_scraper_get_settings_names() {
+function scholar_scraper_get_settings_names(): array {
 	return array_map( function ( $setting ) {
 		return $setting['name'];
 	}, PLUGIN_SETTINGS );
@@ -80,8 +85,9 @@ function scholar_scraper_get_settings_names() {
  * @param string $setting_name La chaîne de caractère à vérifier.
  *
  * @return bool True si la chaîne de caractère correspond à l'un des paramètres du plugin, false sinon.
+ * @since 1.0.0
  */
-function scholar_scraper_is_plugin_setting( string $setting_name ) {
+function scholar_scraper_is_plugin_setting( string $setting_name ): bool {
 	return in_array( $setting_name, scholar_scraper_get_settings_names() );
 }
 
@@ -93,6 +99,7 @@ function scholar_scraper_is_plugin_setting( string $setting_name ) {
  * @param string $wanted_time Heure au format H:i:s
  *
  * @return string Timestamp modifié au format Y-m-d H:i:s
+ * @since 1.0.0
  */
 function scholar_scraper_set_specific_time_timestamp( string $timestamp = "", string $wanted_time = "" ): string {
 
@@ -132,6 +139,7 @@ function scholar_scraper_set_specific_time_timestamp( string $timestamp = "", st
  * @param int $interval L'intervalle en secondes.
  *
  * @return string
+ * @since 1.0.0
  */
 function scholar_scraper_get_next_specific_timestamp( string $timestamp = "", string $wanted_time = "", int $interval = 0 ): string {
 	$timestamp = scholar_scraper_set_specific_time_timestamp( $timestamp, $wanted_time );
@@ -164,9 +172,10 @@ function scholar_scraper_get_next_specific_timestamp( string $timestamp = "", st
  * @param bool $append Si true, le contenu sera ajouté à la fin du fichier. Si false, le contenu écrasera le contenu du fichier.
  * @param bool $add_new_line Si true, une nouvelle ligne sera ajoutée à la fin du contenu.
  *
- * @return bool
+ * @return bool True si l'écriture s'est bien déroulée, false sinon.
+ * @since 1.0.0
  */
-function scholar_scrapper_write_in_file( string $filePath, string $content, bool $append = true, bool $add_new_line = true ): bool {
+function scholar_scraper_write_in_file( string $filePath, string $content, bool $append = true, bool $add_new_line = true ): bool {
 	if ( empty( $content ) || empty( $filePath ) ) {
 		return false;
 	}
@@ -202,27 +211,28 @@ function scholar_scrapper_write_in_file( string $filePath, string $content, bool
  * @param string $message Le message d'erreur à afficher.
  *
  * @return bool True si le message a bien été affiché, false sinon.
+ * @since 1.0.0
  */
 function scholar_scraper_log( string $logType, string $message ): bool {
 
 	// Entrée : Le message est vide
 	//       => On ne crée pas de log
-	if( empty( $message ) ) {
+	if ( empty( $message ) ) {
 		return false;
 	}
 
 	// Entrée : Le type de message n'est pas valide
 	//       => On ne crée pas de log
-	if( ! in_array( $logType, LOG_TYPE::ALL ) ) {
+	if ( ! in_array( $logType, LOG_TYPE::ALL ) ) {
 		return false;
 	}
 
 	// On récupère la longueur maximale des types de messages
-	$maxLength =  max( array_map( 'strlen', LOG_TYPE::ALL ) ) + 3;
+	$maxLength = max( array_map( 'strlen', LOG_TYPE::ALL ) ) + 3;
 	// On ajoute le timestamp et le type de message au message
-	$message = sprintf( "%s\t%-{$maxLength}s ", date( "Y-m-d H:i:s" ), $logType) . $message;
+	$message = sprintf( "%s\t%-{$maxLength}s ", date( "Y-m-d H:i:s" ), $logType ) . $message;
 
-	return scholar_scrapper_write_in_file( LOG_FILE, $message );
+	return scholar_scraper_write_in_file( LOG_FILE, $message );
 }
 
 
@@ -232,6 +242,7 @@ function scholar_scraper_log( string $logType, string $message ): bool {
  *
  * @return mixed Object of class $class
  * @throws ReflectionException
+ * @since 1.0.0
  */
 function scholar_scraper_cast_object_to_class( mixed $object, string $class ) {
 
