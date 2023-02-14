@@ -4,7 +4,7 @@ use Model\ScholarPublication;
 
 // Add the shortcode to the plugin
 add_shortcode( 'scholar_scraper', 'scholar_scraper_display_result' );
-//add_shortcode( 'scholar_scraper', 'scholar_scraper_start_scraping' );
+//add_shortcode( 'scholar_scraper_debug', 'scholar_scraper_start_scraping' );
 
 // Add the action to activate the plugin
 register_activation_hook( PLUGIN_FILE, 'scholar_scraper_activation' );
@@ -13,23 +13,32 @@ register_activation_hook( PLUGIN_FILE, 'scholar_scraper_activation' );
 register_deactivation_hook( PLUGIN_FILE, 'scholar_scraper_deactivation' );
 
 // Add the action to init the plugin
-add_action( 'admin_init', 'scholar_scraper_admin_init' );
+add_action( 'admin_init', 'scholar_scraper_admin_init', PLUGIN_PRIORITY );
 
 // Add the action to create the menu
-add_action( 'admin_menu', 'add_scholar_scraper_menu' );
+add_action( 'admin_menu', 'add_scholar_scraper_menu', PLUGIN_PRIORITY );
 
 // Add the action to add links in the "Plugins" page of WordPress
 add_filter( 'plugin_action_links_' . plugin_basename( PLUGIN_FILE ), 'scholar_scraper_add_plugin_links', 10, 4 );
 
 // Add the action to call when the settings are updated
-add_action( 'update_option', 'scholar_scraper_on_settings_update', 10, 3 );
-
-// Action triggered when an error occurs
-add_action( 'admin_notices', 'scholar_scraper_admin_notices' );
+add_action( 'update_option', 'scholar_scraper_on_settings_update', PLUGIN_PRIORITY, 3 );
 
 // Add the action to call for initializing the block
-add_action( 'enqueue_block_editor_assets', 'scholar_scraper_custom_block_script_register' );
-add_action( 'init', 'scholar_scraper_custom_block_script_register' );
+add_action( 'enqueue_block_editor_assets', 'scholar_scraper_custom_block_script_register', PLUGIN_PRIORITY );
+add_action( 'init', 'scholar_scraper_custom_block_script_register', PLUGIN_PRIORITY );
+
+
+/**
+ * Fonction qui gère les fichiers à inclure pour initialiser le plugin.
+ *
+ * @return void
+ * @since 1.0.0
+ */
+function scholar_scraper_includes() {
+	require_once PLUGIN_DIR . 'config.php';
+	require_once PLUGIN_DIR . 'src/index.php';
+}
 
 
 /**
@@ -41,6 +50,8 @@ add_action( 'init', 'scholar_scraper_custom_block_script_register' );
  * @since 1.0.0
  */
 function scholar_scraper_init_everything( string $cronFrequency = null ) {
+
+	scholar_scraper_includes();
 
 	// Init the styles
 	scholar_scraper_init_styles();
@@ -74,7 +85,7 @@ function scholar_scraper_init_styles() {
  */
 function scholar_scraper_activation() {
 	scholar_scraper_init_everything();
-	wp_schedule_single_event( time(), CRON_HOOK_NAME );
+	wp_schedule_single_event( time(), CRON_HOOK_IMMEDIATE_NAME );
 }
 
 
@@ -84,16 +95,19 @@ function scholar_scraper_activation() {
  * @since 1.0.0
  */
 function scholar_scraper_deactivation() {
-	scholar_scraper_unschedule_event( CRON_HOOK_NAME );
+	scholar_scraper_includes();
+	scholar_scraper_unschedule_event();
+	scholar_scraper_unschedule_event( CRON_HOOK_IMMEDIATE_NAME );
 }
 
 
 /**
  * Adds the settings page to the admin menu.
  * @return void
- * @since  1.0.0
+ * @since 1.0.0
  */
 function add_scholar_scraper_menu() {
+	scholar_scraper_includes();
 
 	add_menu_page(
 		'Scholar Scraper',
@@ -115,9 +129,10 @@ function add_scholar_scraper_menu() {
  * @param string $context The plugin context.
  *
  * @return array<string,string> Array of action links.
- * @since  1.0.0
+ * @since 1.0.0
  */
-function scholar_scraper_add_plugin_links( $plugin_actions, $plugin_file, $plugin_data, $context ) {
+function scholar_scraper_add_plugin_links( array $plugin_actions, string $plugin_file, array $plugin_data, string $context ): array {
+	scholar_scraper_includes();
 
 	$new_actions = array();
 
@@ -146,8 +161,12 @@ function scholar_scraper_add_plugin_links( $plugin_actions, $plugin_file, $plugi
  * @since 1.0.0
  */
 function scholar_scraper_admin_init() {
+
+	if ( ! current_user_can( 'manage_options' ) && ( ! wp_doing_ajax() ) ) {
+		wp_die( __( 'You are not allowed to access this part of the site' ) );
+	}
+
 	scholar_scraper_init_everything();
-	//scholar_scraper_load_plugin();
 }
 
 
@@ -160,6 +179,17 @@ function scholar_scraper_display_settings_page() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
+
+	wp_register_style( 'scholar_scraper_settings_page_style', PLUGIN_URL . 'assets/css/scholar-scraper-settings-page.css' );
+	// Enqueue the style "scholar_scraper_settings_page.css"
+	wp_enqueue_style( 'scholar_scraper_settings_page_style' );
+
+	// The array('jquery', 'jquery-ui-core') will force jquery and jquery-ui-core from core to be included
+	wp_enqueue_script( 'scholar_scraper_settings_page_script', PLUGIN_URL . 'assets/js/scholar-scraper-settings-page.js' );
+
+	// Only include jquery core
+	wp_enqueue_script( 'scholar_scraper_settings_page_script' );
+
 
 	scholar_scraper_display_settings_form();
 }
@@ -180,6 +210,8 @@ function scholar_scraper_on_settings_update( string $option, mixed $old_value, m
 		return;
 	}
 
+	scholar_scraper_includes();
+
 	if ( ! scholar_scraper_is_plugin_setting( $option ) ) {
 		return;
 	}
@@ -191,26 +223,17 @@ function scholar_scraper_on_settings_update( string $option, mixed $old_value, m
 
 
 /**
- * Méthode pour afficher les messages d'erreur.
- *
- * @return void
- * @since 1.0.0
- */
-function scholar_scraper_admin_notices(): void {
-	settings_errors();
-}
-
-
-/**
  * Fonction qui enregistre un type de block Gutenberg.
  * @return void
  * @since 1.0.0
  */
 function scholar_scraper_custom_block_script_register() {
 
+	scholar_scraper_includes();
+
 	wp_enqueue_script(
 		'scholar_scraper_block_script',
-		PLUGIN_URL . 'assets/js/scholar_scraper_block.js',
+		PLUGIN_URL . 'assets/js/scholar-scraper-block.js',
 		array( 'wp-blocks', 'wp-element', 'wp-editor', 'wp-i18n' ),
 		true
 	);
@@ -265,7 +288,7 @@ function scholar_scraper_custom_block_script_register() {
  * @since 1.0.0
  */
 function scholar_scraper_block_render_callback( array $attributes ): string {
-
+	scholar_scraper_includes();
 	scholar_scraper_init_styles();
 
 	if ( ! is_array( $attributes ) || empty( $attributes ) ) {

@@ -21,6 +21,36 @@ abstract class LOG_TYPE {
 	];
 }
 
+/**
+ * Fonction pour récupérer les paramètres du plugin ou les valeurs par défaut si ils ne sont pas encore définis.
+ * @return false|mixed|null Les paramètres du plugin ou les valeurs par défaut si ils ne sont pas encore définis.
+ * @since 1.0.0
+ */
+function scholar_scraper_get_settings_or_default() {
+
+	$default = [];
+
+	foreach ( PLUGIN_SETTINGS as $setting_acronym => $setting ) {
+		$default[ $setting['name'] ] = scholar_scraper_get_default_value( $setting_acronym );
+	}
+
+	$settings = get_option( OPTION_GROUP );
+
+	if ( is_null( $settings ) || $settings === false ) {
+		return $default;
+	}
+
+	// Remove all keys that are not in the default settings
+	$settings = array_intersect_key( $settings, $default );
+
+	// Sanitize settings
+	$settings = scholar_scraper_sanitize_settings( $settings, false );
+	// Add all keys that are not in the settings
+	$settings = array_merge( $default, $settings );
+
+	return $settings;
+}
+
 
 /**
  * Initialise les paramètres du plugin s'ils ne sont pas encore définis.
@@ -28,11 +58,9 @@ abstract class LOG_TYPE {
  * @return void
  * @since 1.0.0
  */
-function scholar_scraper_default_settings(): void {
-	foreach ( PLUGIN_SETTINGS as $setting_acronym => $setting ) {
-		$value = get_option( $setting['name'], scholar_scraper_get_default_value( $setting_acronym ) );
-		update_option( $setting['name'], $value );
-	}
+function scholar_scraper_set_default_settings(): void {
+	$settings = scholar_scraper_get_settings_or_default();
+	update_option( OPTION_GROUP, $settings );
 }
 
 
@@ -41,11 +69,72 @@ function scholar_scraper_default_settings(): void {
  *
  * @param string $setting_acronym Acronyme du paramètre.
  *
- * @return string Valeur du paramètre ou valeur par défaut si le paramètre n'est pas défini.
+ * @return mixed Valeur du paramètre ou valeur par défaut si le paramètre n'est pas défini.
  * @since 1.0.0
  */
-function scholar_scraper_get_setting_value( string $setting_acronym ) {
-	return get_option( PLUGIN_SETTINGS[ $setting_acronym ]['name'], scholar_scraper_get_default_value( $setting_acronym ) );
+function scholar_scraper_get_setting_value( string $setting_acronym ): mixed {
+	$settings = get_option( OPTION_GROUP );
+
+	if ( ! isset( PLUGIN_SETTINGS[ $setting_acronym ] ) ) {
+		return null;
+	}
+
+	$requestedSetting = PLUGIN_SETTINGS[ $setting_acronym ];
+
+	if ( empty( $settings[ $requestedSetting['name'] ] ) ) {
+		return scholar_scraper_get_default_value( $setting_acronym );
+	}
+
+	// If the type is input, check that the value matches the regex
+	if ( $requestedSetting['type'] === 'input' ) {
+
+		if ( ! isset( $requestedSetting['regex'] ) ) {
+			return $settings[ $requestedSetting['name'] ];
+		}
+
+		$regex = $requestedSetting['regex'];
+
+		if ( ! preg_match( $regex, $settings[ $requestedSetting['name'] ] ) ) {
+			return scholar_scraper_get_default_value( $setting_acronym );
+		}
+
+	} elseif ( $requestedSetting['type'] === 'number' ) {
+
+		if ( ! is_numeric( $settings[ $requestedSetting['name'] ] ) ) {
+			return scholar_scraper_get_default_value( $setting_acronym );
+		}
+
+		if ( isset( $requestedSetting['min'] ) && $settings[ $requestedSetting['name'] ] < $requestedSetting['min'] ) {
+			return scholar_scraper_get_default_value( $setting_acronym );
+		}
+
+		if ( isset( $requestedSetting['max'] ) && $settings[ $requestedSetting['name'] ] > $requestedSetting['max'] ) {
+			return scholar_scraper_get_default_value( $setting_acronym );
+		}
+
+	} elseif ( $requestedSetting['type'] === 'select' ) {
+		$allowed_values = array_keys( $requestedSetting['options'] );
+
+		if ( ! in_array( $settings[ $requestedSetting['name'] ], $allowed_values ) ) {
+			return scholar_scraper_get_default_value( $setting_acronym );
+		}
+
+	} elseif ( $requestedSetting['type'] === 'multi_select' ) {
+		$allowed_values  = array_keys( $requestedSetting['options'] );
+		$selected_values = $settings[ $requestedSetting['name'] ];
+
+		if ( ! is_array( $selected_values ) ) {
+			return scholar_scraper_get_default_value( $setting_acronym );
+		}
+
+		foreach ( $selected_values as $selected_value ) {
+			if ( ! in_array( $selected_value, $allowed_values ) ) {
+				return scholar_scraper_get_default_value( $setting_acronym );
+			}
+		}
+	}
+
+	return $settings[ $requestedSetting['name'] ];
 }
 
 
@@ -62,7 +151,7 @@ function scholar_scraper_get_setting_name( string $setting_acronym ): ?string {
 		return null;
 	}
 
-	return PLUGIN_SETTINGS[ $setting_acronym ]['name'];
+	return sprintf( "%s[%s]", OPTION_GROUP, PLUGIN_SETTINGS[ $setting_acronym ]['name'] );
 }
 
 
@@ -305,4 +394,66 @@ function scholar_scraper_cast_object_to_class( mixed $object, string $class ) {
 	}
 
 	return $castedObject;
+}
+
+
+/**
+ * Fonction permettant de récupérer les utilisateurs ayant un rôle donné.
+ *
+ * @param string $role Le rôle des utilisateurs à récupérer.
+ *
+ * @return array Un tableau contenant les utilisateurs ayant le rôle donné.
+ * @since 1.0.0
+ */
+function scholar_scraper_get_users_having_role( string $role ): array {
+	$users = get_users( [ 'role' => $role ] );
+
+	return $users;
+}
+
+
+/**
+ * Fonction permettant de récupérer les utilisateurs ayant un rôle donné ainsi que leurs métadonnées.
+ *
+ * @param string $role Le rôle des utilisateurs à récupérer.
+ *
+ * @return array Un tableau contenant les utilisateurs ayant le rôle donné ainsi que leurs métadonnées.
+ * @since 1.0.0
+ */
+function scholar_scraper_get_users_with_meta_having_role( string $role ): array {
+	$users = scholar_scraper_get_users_having_role( $role );
+
+	$usersWithMeta = [];
+
+	foreach ( $users as $user ) {
+
+		$user->meta      = get_user_meta( $user->ID );
+		$usersWithMeta[] = $user;
+	}
+
+	return $usersWithMeta;
+}
+
+
+/**
+ * Fonction qui retourne la liste valeurs des métadonnées d'un rôle donné.
+ *
+ * @param string $role Le rôle des utilisateurs à récupérer.
+ * @param string $metaKey La clé de la métadonnée à récupérer.
+ *
+ * @return array Un tableau contenant les valeurs des métadonnées d'un rôle donné.
+ * @since 1.0.0
+ */
+function scholar_scraper_get_list_meta_key( string $role, string $metaKey ): array {
+	$users = scholar_scraper_get_users_with_meta_having_role( $role );
+
+	$list = [];
+
+	foreach ( $users as $user ) {
+		if ( isset( $user->meta[ $metaKey ] ) && ! empty( $user->meta[ $metaKey ][0] ) ) {
+			$list[] = $user->meta[ $metaKey ][0];
+		}
+	}
+
+	return $list;
 }

@@ -1,0 +1,43 @@
+#scholar-scraper-settings-form.relative {
+    position: relative;
+}
+
+#scholar-scraper-settings-form p {
+    text-align: justify;
+}
+
+#scholar-scraper-settings-form .tab-content .section-content:not(.section-content-active) {
+    display: none;
+}
+
+#scholar-scraper-settings-form .tab-content .section-content.section-content-active {
+    display: block;
+}
+
+#scholar-scraper-settings-form .tab-content table.form-table {
+    display: block;
+}
+
+#scholar-scraper-settings-form .tab-content .section-description {
+    margin-bottom: 0;
+}
+
+
+#scholar-scraper-settings-form .nav-tab {
+    cursor: pointer;
+}
+
+#scholar-scraper-settings-form .field-description {
+    font-weight: normal;
+    font-style: italic;
+    margin-bottom: 0;
+}
+
+#scholar-scraper-settings-form .tab-content .section-content td > * {
+    width: 100%;
+}
+
+#scholar-scraper-settings-form > p.submit.absolute {
+    position: absolute;
+    bottom: 0;
+}

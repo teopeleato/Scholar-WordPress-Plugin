@@ -5,6 +5,10 @@ namespace Model;
 use ReflectionClass;
 use ReflectionProperty;
 
+/**
+ * Class ScholarPublication.
+ * Represents a publication of a ScholarAuthor.
+ */
 class ScholarPublication {
 
 	/**

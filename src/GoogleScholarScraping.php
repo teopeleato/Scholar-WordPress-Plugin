@@ -7,7 +7,8 @@ use Model\ScholarPublicationCollection;
 
 
 // Cron related actions
-add_action( CRON_HOOK_NAME, 'scholar_scraper_start_scraping', 10, 0 );
+add_action( CRON_HOOK_NAME, 'scholar_scraper_start_scraping', PLUGIN_PRIORITY, 0 );
+add_action( CRON_HOOK_IMMEDIATE_NAME, 'scholar_scraper_start_scraping', PLUGIN_PRIORITY, 0 );
 
 
 /**
@@ -60,8 +61,7 @@ function scholar_scraper_start_scraping() {
 
 	// On vérifie que le script python existe
 	if ( ! is_file( PYTHON_SCRIPT_PATH ) || ! is_readable( PYTHON_SCRIPT_PATH ) ) {
-		delete_transient( CRON_TRANSIENT );
-		scholar_scraper_log( LOG_TYPE::ERROR, "Python script not found" );
+		scholar_scraper_on_cron_exec_error( "Python script not found" );
 
 		return "";
 	}
@@ -69,36 +69,31 @@ function scholar_scraper_start_scraping() {
 	// On vérifie que le chemin vers python est correct
 	$pythonPath = scholar_scraper_get_setting_value( 'PYTHON_PATH' );
 	if ( ! $pythonPath || ! is_executable( $pythonPath ) ) {
-		delete_transient( CRON_TRANSIENT );
-		scholar_scraper_log( LOG_TYPE::ERROR, "Python path not found" );
-
-		return "";
-	}
-
-	// On vérifié qu'on a bien accès à la base de données WordPress
-	global $wpdb;
-	if ( ! isset( $wpdb ) ) {
-		delete_transient( CRON_TRANSIENT );
-		scholar_scraper_log( LOG_TYPE::ERROR, "Database not found" );
+		scholar_scraper_on_cron_exec_error( "Python path not found" );
 
 		return "";
 	}
 
 	// On s'assure que les dépendances Python sont bien installées
 	if ( ! scholar_scraper_install_requirements() ) {
-		delete_transient( CRON_TRANSIENT );
-		scholar_scraper_log( LOG_TYPE::ERROR, "Python requirements not installed" );
+		scholar_scraper_on_cron_exec_error( "Python requirements not installed" );
 
-		return false;
+		return "";
 	}
 
-	# TODO: Get the scholar users id from the database
-	$scholarUsers = array( "1iQtvdsAAAAJ", "dAKCYJgAAAAJ" );
+	// Get all the users that are defined as researchers
+	$scholarUsers = [];
+
+	foreach ( scholar_scraper_get_setting_value( 'RESEARCHERS_ROLES' ) as $role ) {
+		$scholarUsers = array_merge(
+			$scholarUsers,
+			scholar_scraper_get_list_meta_key( $role, scholar_scraper_get_setting_value( 'META_KEY_SCHOLAR_ID' ) )
+		);
+	}
 
 	// On vérifie qu'on a bien récupéré des utilisateurs
 	if ( ! count( $scholarUsers ) ) {
-		delete_transient( CRON_TRANSIENT );
-		scholar_scraper_log( LOG_TYPE::ERROR, "No scholar users found" );
+		scholar_scraper_on_cron_exec_error( "No scholar users found" );
 
 		return "";
 	}
@@ -112,10 +107,11 @@ function scholar_scraper_start_scraping() {
 
 	// On formate la commande à exécuter
 	$command = sprintf(
-		"%s %s %s 2>&1",
+		"%s %s maxThreads=%s %s 2>&1",
 		scholar_scraper_get_setting_value( 'PYTHON_PATH' ),
 		PYTHON_SCRIPT_PATH,
-		$scraperArguments
+		scholar_scraper_get_setting_value( 'PYTHON_API_THREADS' ),
+		trim( $scraperArguments )
 	);
 
 	// On exécute la commande
@@ -123,7 +119,7 @@ function scholar_scraper_start_scraping() {
 
 	// On vérifie que la commande s'est bien déroulée, sinon on sort de la fonction
 	if ( $ret_var != 0 ) {
-		delete_transient( CRON_TRANSIENT );
+		scholar_scraper_on_cron_exec_error();
 
 		return "";
 	}
@@ -148,6 +144,30 @@ function scholar_scraper_start_scraping() {
 
 
 /**
+ * Fonction permettant de gérer les actions à effectuer lorsqu'une erreur survient lors de l'exécution du cron.
+ *
+ * @param string|null $message Le message d'erreur.
+ *
+ * @return void
+ * @since 1.0.0
+ */
+function scholar_scraper_on_cron_exec_error( string $message = null ) {
+	delete_transient( CRON_TRANSIENT );
+
+	if ( ! empty( $message ) ) {
+		scholar_scraper_log( LOG_TYPE::ERROR, $message );
+	}
+
+	$retryAfter = scholar_scraper_get_setting_value( 'CRON_RETRY_AFTER' );
+	scholar_scraper_log( LOG_TYPE::INFO, "Retrying in " . $retryAfter . " minutes" );
+
+	// On réessaie dans CRON_RETRY_AFTER secondes
+	wp_schedule_single_event( time() + ( $retryAfter * MINUTE_IN_SECONDS ), CRON_HOOK_IMMEDIATE_NAME );
+
+}
+
+
+/**
  * Fonction permettant d'afficher le résultat de l'exécution du script python.
  *
  * @param mixed $atts Les attributs du shortcode.
@@ -157,8 +177,6 @@ function scholar_scraper_start_scraping() {
  * @since 1.0.0
  */
 function scholar_scraper_display_result( mixed $atts ): string {
-
-	//echo "<pre>" . print_r( $atts, true ) . "</pre>";
 
 	// Get the attributes passed to the shortcode
 	$atts = shortcode_atts(
@@ -299,7 +317,7 @@ function scholar_scraper_display_result( mixed $atts ): string {
 		}
 
 		ob_start();
-		include( PLUGIN_PATH . 'src/Template/PublicationCardTemplate.php' );
+		include( PLUGIN_DIR . 'src/Template/PublicationCardTemplate.php' );
 		$toReturn .= ob_get_clean();
 
 	}

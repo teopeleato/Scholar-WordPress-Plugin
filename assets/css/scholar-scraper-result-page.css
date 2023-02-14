@@ -8,6 +8,10 @@
     max-width: 95% !important;
 }
 
+.scholar-scraper-publications * {
+    text-align: justify;
+}
+
 
 @media screen and (min-width: 1001px) {
     .scholar-scraper-publications {

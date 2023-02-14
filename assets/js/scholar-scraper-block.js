@@ -1,13 +1,3 @@
-//import icon from '../img/google-scholar';
-
-// Get the icon content from ../img/google-scholar.svg as base64
-/*const icon = new Image();
-icon.src = 'data:image/svg+xml;base64,' + btoa( unescape( encodeURIComponent( "../img/google-scholar.svg" ) ) );
-
-// On ajoute l'image à la fin du body
-document.body.appendChild( icon );
-console.log( icon);*/
-
 // Create an element that can be user as an icon and loads the svg file
 const icon = wp.element.createElement(
     'img',
@@ -36,15 +26,46 @@ wp.blocks.registerBlockType('scholar-scraper/scholar-scraper-block', {
         }
     },
     edit: function (props) {
+
+        /**
+         * Function called when the user changes the number of papers to show.
+         * @param event The event that triggered the function.
+         * @since 1.0.0
+         */
         function updateNumberPaperToShow(event) {
+            // Check that the value is a number
+            if (isNaN(event.target.value) || !Number.isInteger(Number(event.target.value)) || event.target.value <= 0) {
+                event.preventDefault();
+                return;
+            }
             props.setAttributes({number_papers_to_show: Number(event.target.value)});
         }
 
+        /**
+         * Function called when the user changes the field used to sort the papers.
+         * @param event The event that triggered the function.
+         * @since 1.0.0
+         */
         function updateSortByField(event) {
+            // Check that the value is in the list of available sort by fields
+            if (!Object.keys(js_data.available_sort_by_fields).includes(event.target.value)) {
+                event.preventDefault();
+                return;
+            }
             props.setAttributes({sort_by_field: event.target.value});
         }
 
+        /**
+         * Function called when the user changes the sort direction.
+         * @param event The event that triggered the function.
+         * @since 1.0.0
+         */
         function updateSortByDirection(event) {
+            // Check that the value is in the list of available sort by directions
+            if (!["asc", "desc"].includes(event.target.value)) {
+                event.preventDefault();
+                return;
+            }
             props.setAttributes({sort_by_direction: event.target.value});
         }
 

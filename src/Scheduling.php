@@ -91,17 +91,19 @@ function scholar_scraper_schedule_event( string $startingTime = "", string $freq
 /**
  * Annule l'événement cron.
  *
+ * @param string $hookName Nom de l'action à supprimer. Si vide, la valeur par défaut sera utilisée.
+ *
  * @return mixed Le résultat de la fonction wp_clear_scheduled_hook().
  * @see https://developer.wordpress.org/reference/functions/wp_clear_scheduled_hook/
  * @since 1.0.0
  */
-function scholar_scraper_unschedule_event(): mixed {
+function scholar_scraper_unschedule_event( string $hookName = CRON_HOOK_NAME ): mixed {
 	// Check if the event is scheduled
-	if ( ! wp_get_scheduled_event( CRON_HOOK_NAME ) ) {
+	if ( ! wp_get_scheduled_event( $hookName ) ) {
 		return false;
 	}
 
-	return wp_clear_scheduled_hook( CRON_HOOK_NAME );
+	return wp_clear_scheduled_hook( $hookName );
 }
 
 
