@@ -28,6 +28,10 @@ add_action( 'update_option', 'scholar_scraper_on_settings_update', PLUGIN_PRIORI
 add_action( 'enqueue_block_editor_assets', 'scholar_scraper_custom_block_script_register', PLUGIN_PRIORITY );
 add_action( 'init', 'scholar_scraper_custom_block_script_register', PLUGIN_PRIORITY );
 
+// Add the ajax callback to search in the papers
+add_action( 'wp_ajax_search_in_papers', 'scholar_scraper_search_in_papers' );
+add_action( 'wp_ajax_nopriv_search_in_papers', 'scholar_scraper_search_in_papers' );
+
 
 /**
  * Fonction qui gère les fichiers à inclure pour initialiser le plugin.
@@ -70,11 +74,28 @@ function scholar_scraper_init_everything( string $cronFrequency = null ) {
  * @since 1.0.0
  */
 function scholar_scraper_init_styles() {
-	wp_register_style( 'scholar_scraper_dashicons', PLUGIN_URL . 'assets/css/scholar-scraper-font/css/scholar-scraper.css' );
-	wp_register_style( 'scholar_scraper_result_page_style', PLUGIN_URL . 'assets/css/scholar-scraper-result-page.css' );
-
+	// Custom font for the plugin's icons
+	wp_register_style(
+		'scholar_scraper_dashicons',
+		PLUGIN_URL . 'assets/css/scholar-scraper-font/css/scholar-scraper.css'
+	);
 	wp_enqueue_style( 'scholar_scraper_dashicons' );
+
+	// Custom style for the plugin's result page
+	wp_register_style(
+		'scholar_scraper_result_page_style',
+		PLUGIN_URL . 'assets/css/scholar-scraper-result-page.css'
+	);
 	wp_enqueue_style( 'scholar_scraper_result_page_style' );
+
+
+	// Custom style for the plugin's search form in the result page
+	wp_register_style(
+		'scholar-scraper-search-form-style',
+		PLUGIN_URL . 'assets/css/scholar-scraper-search-form.css'
+	);
+
+	wp_enqueue_style( 'scholar-scraper-search-form-style' );
 }
 
 
@@ -184,10 +205,8 @@ function scholar_scraper_display_settings_page() {
 	// Enqueue the style "scholar_scraper_settings_page.css"
 	wp_enqueue_style( 'scholar_scraper_settings_page_style' );
 
-	// The array('jquery', 'jquery-ui-core') will force jquery and jquery-ui-core from core to be included
 	wp_enqueue_script( 'scholar_scraper_settings_page_script', PLUGIN_URL . 'assets/js/scholar-scraper-settings-page.js' );
 
-	// Only include jquery core
 	wp_enqueue_script( 'scholar_scraper_settings_page_script' );
 
 
@@ -240,13 +259,19 @@ function scholar_scraper_custom_block_script_register() {
 
 	$publications_fields = ScholarPublication::get_non_array_fields();
 
-	$defaultSort = DEFAULT_SORT_FIELD;
+	$defaultSort = DEFAULT_PAPERS_SORT_FIELD;
 
-	// On vérifie que le tableau contient bien un element dont 'value' est égal à DEFAULT_SORT_FIELD
-	if ( ! array_key_exists( DEFAULT_SORT_FIELD, $publications_fields ) ) {
+	// On vérifie que le tableau contient bien un element dont 'value' est égal à DEFAULT_PAPERS_SORT_FIELD
+	if ( ! array_key_exists( DEFAULT_PAPERS_SORT_FIELD, $publications_fields ) ) {
 		// Si ce n'est pas le cas, on prend le premier élément du tableau
 		$defaultSort = array_key_first( $publications_fields );
 	}
+
+	// Create an array where the keys are the keys of PAPERS_DISPLAY_TYPES and the values are the PAPERS_DISPLAY_TYPES[key][name] values
+	$display_types = array_combine(
+		array_keys( PAPERS_DISPLAY_TYPES ),
+		array_column( PAPERS_DISPLAY_TYPES, 'name' )
+	);
 
 
 	wp_localize_script(
@@ -258,7 +283,11 @@ function scholar_scraper_custom_block_script_register() {
 			'default_number_papers_to_show' => DEFAULT_NUMBER_OF_PAPERS_TO_SHOW,
 			'available_sort_by_fields'      => $publications_fields,
 			'default_sort_by_field'         => $defaultSort,
-			'default_sort_by_direction'     => DEFAULT_SORT_DIRECTION,
+			'default_sort_by_direction'     => DEFAULT_PAPERS_SORT_DIRECTION,
+			'available_display_types'       => $display_types,
+			'default_display_type'          => DEFAULT_PAPERS_DISPLAY_TYPE,
+			'default_allow_search'          => DEFAULT_PAPERS_ALLOW_SEARCH,
+			'default_block_id'              => uniqid( 'scholar_scraper_block_' ),
 		)
 	);
 
@@ -295,9 +324,35 @@ function scholar_scraper_block_render_callback( array $attributes ): string {
 		return do_shortcode( "[scholar_scraper]" );
 	}
 
+	// Register a script to handle the AJAX request
+	wp_register_script(
+		'scholar_scraper_search_form_script',
+		PLUGIN_URL . 'assets/js/scholar-scraper-search-form.js',
+		array( 'jquery' ),
+	);
+
+	// Enqueue the script
+	wp_enqueue_script( 'scholar_scraper_search_form_script' );
+
+	// Localize the script with new data
+	wp_localize_script(
+		'scholar_scraper_search_form_script',
+		'js_data',
+		array(
+			'ajax_url'     => admin_url( 'admin-ajax.php' ),
+			'block_id'     => $attributes['block_id'],
+			'post_id'      => get_the_ID(),
+			'search_delay' => SEARCH_DELAY,
+		)
+	);
+
+
 	// Revert order of the array
 	$attributes = array_reverse( $attributes );
 
+	if ( isset( $attributes['className'] ) ) {
+		unset( $attributes['className'] );
+	}
 	$attributesString = "";
 
 	foreach ( $attributes as $key => $value ) {
@@ -310,7 +365,64 @@ function scholar_scraper_block_render_callback( array $attributes ): string {
 
 	$attributesString = trim( $attributesString );
 
-
 	// Return the shortcode output
-	return do_shortcode( "[scholar_scraper $attributesString author_name=\"super test\"]" );
+	return do_shortcode( "[scholar_scraper $attributesString]" );
+}
+
+/**
+ * Fonction permettant de récupérer les publications correspondant à la requête de recherche (au format HTML).
+ * @throws ReflectionException Si une erreur survient lors de la récupération des champs de la classe ScholarPublication.
+ * @since 1.1.0
+ */
+function scholar_scraper_search_in_papers() {
+	$query = $_POST['search_query'];
+	$query = sanitize_text_field( $query );
+	$query = trim( $query );
+
+	if ( empty( $_POST['block_id'] ) || empty( $_POST['post_id'] ) ) {
+		wp_send_json_error();
+	}
+
+	$bloc_id = $_POST['block_id'];
+	$post_id = $_POST['post_id'];
+
+
+	// Get the content of the current post
+	$content = get_post( $post_id )->post_content;
+
+
+	if ( ! has_blocks( $content ) ) {
+		wp_send_json_error( "No blocks found." );
+	}
+
+	$blocks = parse_blocks( $content );
+
+	// Find the block with the given id
+	$blocks = array_filter( $blocks, function ( $block ) use ( $bloc_id ) {
+		// Check that the block is a scholar_scraper block
+		if ( $block['blockName'] !== 'scholar-scraper/scholar-scraper-block' ) {
+			return false;
+		}
+
+		return $block['attrs']['block_id'] === $bloc_id;
+	} );
+
+	if ( empty( $blocks ) ) {
+		wp_send_json_error( "Block not found." );
+		//wp_send_json_error();
+	}
+
+	$attrs = array_values( $blocks )[0]['attrs'];
+
+	// On vérifie que la recherche est autorisée
+	if ( ( ! isset( $attrs['allow_search'] ) && ! DEFAULT_PAPERS_ALLOW_SEARCH ) || $attrs['allow_search'] === false ) {
+		wp_send_json_error( "Search not allowed." );
+	}
+
+	$attrs['search_query'] = $query;
+	$attrs['is_ajax']      = true;
+
+	wp_send_json_success( scholar_scraper_block_render_callback( $attrs ) );
+
+	// Get the number of papers to show
 }

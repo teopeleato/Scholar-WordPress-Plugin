@@ -58,13 +58,53 @@ define( 'DEFAULT_NUMBER_OF_PAPERS_TO_SHOW', 10 );
  * Default field to sort papers by.
  * @since 1.0.0
  */
-define( 'DEFAULT_SORT_FIELD', 'pub_year' );
+define( 'DEFAULT_PAPERS_SORT_FIELD', 'pub_year' );
 
 /**
  * Default sort order.
  * @since 1.0.0
  */
-define( 'DEFAULT_SORT_DIRECTION', 'desc' );
+define( 'DEFAULT_PAPERS_SORT_DIRECTION', 'desc' );
+
+
+/**
+ * The possible values for the display type of papers.
+ * @since 1.1.0
+ */
+define( 'PAPERS_DISPLAY_TYPES', [
+	'list' => [
+		'template-file'   => 'PublicationListTemplate.php',
+		'name'            => 'List',
+		'container-class' => 'list',
+	],
+	'card' => [
+		'template-file'   => 'PublicationCardTemplate.php',
+		'name'            => 'Card',
+		'container-class' => 'card',
+	],
+
+] );
+
+
+/**
+ * The default display type of papers.
+ * @since 1.1.0
+ */
+define( 'DEFAULT_PAPERS_DISPLAY_TYPE', array_key_first( PAPERS_DISPLAY_TYPES ) );
+
+
+/**
+ * The default value for the "allow search papers" option.
+ * @since 1.1.0
+ */
+define( 'DEFAULT_PAPERS_ALLOW_SEARCH', true );
+
+
+/**
+ * The time in milliseconds to wait before sending a request when searching for papers.
+ * @since 1.1.0
+ */
+define( 'SEARCH_DELAY', 500 );
 
 /**
  * Fréquences de cron personnalisées.

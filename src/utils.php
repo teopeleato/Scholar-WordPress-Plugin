@@ -1,6 +1,8 @@
 <?php
 
 use Model\GenericCollection;
+use Model\ScholarPublication;
+use Model\ScholarPublicationCollection;
 
 
 /**
@@ -456,4 +458,124 @@ function scholar_scraper_get_list_meta_key( string $role, string $metaKey ): arr
 	}
 
 	return $list;
+}
+
+
+/**
+ * Fonction permettant de récupérer les publications qui ont été récupérées par le scraper.
+ * Si le paramètre $searchQuery est passé, la fonction retourne les publications correspondant à la recherche.
+ * La recherche se fait sur :
+ * * le titre des publications
+ * * la description des publications
+ * * l'année de publication des publications
+ * * le nom de l'auteur des publications
+ * * les intérêts de l'auteur des publications
+ *
+ * @param string|null $searchQuery Le paramètre à rechercher dans les publications.
+ *
+ * @return ScholarPublicationCollection|null Un tableau contenant les publications. Null si aucun fichier contenant les publications n'a été trouvé.
+ * @throws ReflectionException Si un problème survient lors de la création d'un objet.
+ * @since 1.1.0
+ */
+function scholar_scraper_get_publications( string $searchQuery = null ): ?ScholarPublicationCollection {
+	// Entrée : le fichier contenant les résultats sérialisés n'existe pas ou n'est pas lisible
+	//       => On essaie de voir si le fichier contenant les résultats non sérialisés existe et est lisible
+	if ( ! is_file( SERIALIZED_RESULTS_FILE ) || ! is_readable( SERIALIZED_RESULTS_FILE ) ) {
+
+		// Entrée : le fichier contenant les résultats non sérialisés n'existe pas ou n'est pas lisible
+		//       => On affiche un message d'erreur
+		if ( ! is_file( RESULTS_FILE ) || ! is_readable( RESULTS_FILE ) ) {
+			return null;
+		}
+
+		$res = file_get_contents( RESULTS_FILE );
+
+		// On décode le résultat en objets PHP
+		$decodedRes = scholar_scraper_decode_results( $res );
+
+		// On serialise le résultat
+		$serialized = serialize( $decodedRes );
+
+		// On écrit le résultat sérialisé dans un fichier
+		scholar_scraper_write_in_file( SERIALIZED_RESULTS_FILE, $serialized, false );
+
+	}
+
+	// Get the content of the result file
+	$res                           = file_get_contents( SERIALIZED_RESULTS_FILE );
+	$res                           = unserialize( $res );
+	$scholarPublicationsCollection = new ScholarPublicationCollection();
+
+	// Add all the publications of all the users to the collection
+	foreach ( $res as $scholarUser ) {
+
+		$publications = $scholarUser->publications->values();
+
+		// Filter the publications if a search is passed
+		// The search should be done like it would be with a search engine
+		if ( ! empty( $searchQuery ) ) {
+			$publications = array_filter( $publications,
+				function ( ScholarPublication $scholarPublication ) use ( $searchQuery, $scholarUser ) {
+					$publicationTitle   = $scholarPublication->title ?? '';
+					$publicationDesc    = $scholarPublication->abstract ?? '';
+					$publicationAuthors = $scholarPublication->author ?? '';
+					$publicationAuthors .= isset( $scholarUser->name ) ? ' ' . $scholarUser->name : '';
+					$publicationYear    = $scholarPublication->pub_year ?? '';
+					$authorInterests    = $scholarUser->interests ?? [];
+
+					// We will test all the search terms in the publication title, description, authors and author interests
+					$searchTerms = [ $searchQuery, ...explode( ' ', $searchQuery ) ];
+
+					// Search case insensitive, not depending accents and special characters
+					$publicationTitle   = remove_accents( strtolower( $publicationTitle ) );
+					$publicationDesc    = remove_accents( strtolower( $publicationDesc ) );
+					$publicationAuthors = remove_accents( strtolower( $publicationAuthors ) );
+					$authorInterests    = array_map( function ( $interest ) {
+						return remove_accents( strtolower( $interest ) );
+					}, $authorInterests );
+
+
+					// Searching
+					foreach ( $searchTerms as $searchTerm ) {
+						$searchTerm = remove_accents( strtolower( $searchTerm ) );
+
+						// If the search term is found in the publication title, description, authors or author interests, we return true
+						if (
+							false !== strpos( $publicationTitle, $searchTerm )
+							|| false !== strpos( $publicationDesc, $searchTerm )
+							|| false !== strpos( $publicationAuthors, $searchTerm )
+							|| false !== strpos( $publicationYear, $searchTerm )
+							|| ! empty( array_filter( $authorInterests, function ( $interest ) use ( $searchTerm ) {
+								return false !== strpos( $interest, $searchTerm );
+							} ) )
+						) {
+							// If the publication author does not contain the user name, we add it at the beginning of the publication name
+							if ( empty( $scholarPublication->author ) ) {
+								$scholarPublication->author = $scholarUser->name;
+							} elseif ( ! str_contains( $scholarPublication->author, $scholarUser->name ) ) {
+								$scholarPublication->author = $scholarUser->name . ' and ' . $scholarPublication->author;
+							}
+
+							return true;
+						}
+					}
+
+					return false;
+				}
+			);
+		} else {
+			// If the publication author does not contain the user name, we add it at the beginning of the publication name
+			foreach ( $publications as $publication ) {
+				if ( empty( $publication->author ) ) {
+					$publication->author = $scholarUser->name;
+				} elseif ( ! str_contains( $publication->author, $scholarUser->name ) ) {
+					$publication->author = $scholarUser->name . ' and ' . $publication->author;
+				}
+			}
+		}
+
+		$scholarPublicationsCollection->add( ...$publications );
+	}
+
+	return $scholarPublicationsCollection;
 }

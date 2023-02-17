@@ -33,9 +33,13 @@
 }
 
 /* Make all form elements (select, input,...) width 100% */
-#scholar-scraper-block-attributes > * {
+#scholar-scraper-block-attributes > *:not(input[type="checkbox"]) {
     width: 100% !important;
     margin: 0 !important;
+}
+
+#scholar-scraper-block-attributes > input[type="checkbox"] {
+    margin: 0 auto 0 0 !important;
 }
 
 #scholar-scraper-block-attributes > label {

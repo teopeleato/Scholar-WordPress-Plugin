@@ -1,5 +1,5 @@
 <?php
-if ( ! isset( $publication ) ) {
+if ( ! isset( $publication ) || empty( $publication->title ) ) {
 	return;
 }
 ?>
@@ -9,55 +9,55 @@ if ( ! isset( $publication ) ) {
 
     <div class="scholar-scraper-publication-card-top">
 
-		<?php
-		if ( isset( $publication->title ) ) { ?>
-            <!-- On affiche le titre de la publication -->
-            <h3 class="scholar-scraper-publication-card-title">
-				<?php echo $publication->title; ?>
-            </h3>
+        <!-- On affiche le titre de la publication -->
+        <h3 class="scholar-scraper-publication-card-title">
+			<?php echo $publication->title; ?>
+        </h3>
 
-		<?php }
 
-		if ( isset( $publication->author ) ) { ?>
+		<?php if ( ! empty( $publication->author ) ) {
+			// Count the number of authors using the explode function
+			$count = count( explode( " and ", $publication->author ) );
+			?>
             <!-- On affiche l'auteur de la publication -->
             <p class="scholar-scraper-publication-card-author">
-                <strong><u>Authors :</u></strong> <?php echo $publication->author; ?>
+                <strong><u>Author<?php echo $count > 1 ? 's' : ''; ?>:</u></strong> <?php echo $publication->author; ?>
             </p>
 
 		<?php }
 
-		if ( isset( $publication->pub_year ) ||
-		     isset( $publication->pages ) ||
-		     isset( $publication->venue ) ||
-		     isset( $publication->journal ) ||
-		     isset( $publication->volume ) ||
-		     isset( $publication->number ) ||
-		     isset( $publication->publisher )
+		if ( ! empty( $publication->pub_year ) ||
+		     ! empty( $publication->pages ) ||
+		     ! empty( $publication->venue ) ||
+		     ! empty( $publication->journal ) ||
+		     ! empty( $publication->volume ) ||
+		     ! empty( $publication->number ) ||
+		     ! empty( $publication->publisher )
 		) { ?>
             <!-- On affiche la date de publication -->
             <p class="scholar-scraper-publication-card-date">
 				<?php
 				$listToShow = [];
 
-				if ( isset( $publication->pub_year ) ) {
+				if ( ! empty( $publication->pub_year ) ) {
 					$listToShow[] = $publication->pub_year . " ";
 				}
 
-				if ( isset( $publication->venue ) ) {
+				if ( ! empty( $publication->venue ) ) {
 					$listToShow[] = $publication->venue . "venue ";
 				}
 
-				if ( isset( $publication->journal ) ) {
+				if ( ! empty( $publication->journal ) ) {
 					$tmpString = $publication->journal;
 
-					if ( isset( $publication->volume ) ) {
+					if ( ! empty( $publication->volume ) ) {
 						$tmpString .= ", vol. " . $publication->volume;
 
-						if ( isset( $publication->pages ) ) {
+						if ( ! empty( $publication->pages ) ) {
 							$tmpString .= ", p. " . $publication->pages;
 						}
 
-					} else if ( isset( $publication->pages ) ) {
+					} else if ( ! empty( $publication->pages ) ) {
 						$tmpString .= ", p. " . $publication->pages;
 					}
 
@@ -72,7 +72,7 @@ if ( ! isset( $publication ) ) {
 			<?php
 		}
 
-		if ( isset( $publication->abstract ) ) { ?>
+		if ( ! empty( $publication->abstract ) ) { ?>
             <!-- On affiche l'abstract de publication -->
             <div class="scholar-scraper-publication-card-abstract">
                 <strong><u>Abstract :</u></strong>
@@ -86,11 +86,21 @@ if ( ! isset( $publication ) ) {
     </div>
 
 	<?php
-	if ( isset( $publication->pub_url ) ) { ?>
+	if ( ! empty( $publication->pub_url ) ) {
+		$url   = $publication->pub_url;
+		$title = "View the publication on the publisher's website";
+	} else if ( ! empty( $publication->author_pub_id ) ) {
+		$url   = 'https://scholar.google.com/citations?view_op=view_citation&citation_for_view=' . $publication->author_pub_id;
+		$title = "View the publication on Google Scholar";
+	}
+
+	if ( ! empty( $url ) && ! empty( $title ) ) {
+		?>
         <!-- On affiche le lien vers la publication -->
         <div class="wp-block-button scholar-scraper-publication-card-link">
             <a class="wp-block-button__link wp-element-button" style="border-radius:15px"
-               href="<?php echo $publication->pub_url; ?>" target="_blank" rel="noopener noreferrer">Click to access the
+               href="<?php echo $url ?>" target="_blank" rel="noopener noreferrer" title="<?php echo $title; ?>">Click
+                to access the
                 publication</a>
         </div>
 	<?php } ?>

@@ -1,4 +1,78 @@
-.scholar-scraper-publications {
+.scholar-scraper-publications:not(.error) * {
+    text-align: justify;
+}
+
+
+/*
+    LIST TEMPLATE STYLES
+*/
+.scholar-scraper-publications.list {
+    --list-item-spacing: 8rem;
+    --transition-time: 0.75s;
+
+    display: grid;
+    grid-template-rows: auto;
+    justify-items: start;
+    align-items: start;
+    grid-gap: calc(var(--list-item-spacing) / 2);
+    margin: auto;
+
+
+    -webkit-transition: grid-gap var(--transition-time) ease;
+    -moz-transition: grid-gap var(--transition-time) ease;
+    -ms-transition: grid-gap var(--transition-time) ease;
+    -o-transition: grid-gap var(--transition-time) ease;
+    transition: grid-gap var(--transition-time) ease;
+}
+
+
+@media screen and (max-width: 900px) {
+
+    .scholar-scraper-publications.list {
+        --list-item-spacing: 4rem;
+    }
+
+}
+
+
+.scholar-scraper-publication-list-item > a {
+    text-decoration: none;
+    color: var(--wp--preset--color--primary) !important;
+    margin-bottom: 0;
+    margin-top: 0;
+    width: 100%;
+}
+
+.scholar-scraper-publication-list-item:not(:last-child):after {
+    content: "";
+    display: block;
+    margin-top: calc(var(--list-item-spacing) / 2);
+    /*border: 1px solid var(--wp--preset--color--primary);*/
+    border-top: 1px solid var(--wp--preset--color--secondary);
+    opacity: 0.5;
+
+
+    -webkit-transition: margin var(--transition-time) ease;
+    -moz-transition: margin var(--transition-time) ease;
+    -ms-transition: margin var(--transition-time) ease;
+    -o-transition: margin var(--transition-time) ease;
+    transition: margin var(--transition-time) ease;
+}
+
+
+.scholar-scraper-publication-list-item > a > *:first-child {
+    margin-top: 0;
+}
+
+.scholar-scraper-publication-list-item > a > *:last-child {
+    margin-bottom: 0;
+}
+
+
+/*
+    CARD TEMPLATE STYLES
+*/
+.scholar-scraper-publications.card {
     display: grid;
     grid-template-columns: repeat(1, auto);
     justify-items: start;
@@ -8,19 +82,15 @@
     max-width: 95% !important;
 }
 
-.scholar-scraper-publications * {
-    text-align: justify;
-}
-
 
 @media screen and (min-width: 1001px) {
-    .scholar-scraper-publications {
+    .scholar-scraper-publications.card {
         width: calc(100% - 10rem) !important;
     }
 }
 
 @media screen and (min-width: 1050px) {
-    .scholar-scraper-publications {
+    .scholar-scraper-publications.card {
         grid-template-columns: repeat(2, auto);
         max-width: 90% !important;
     }

@@ -182,12 +182,19 @@ function scholar_scraper_display_result( mixed $atts ): string {
 	$atts = shortcode_atts(
 		array(
 			'number_papers_to_show' => DEFAULT_NUMBER_OF_PAPERS_TO_SHOW,
-			'sort_by_field'         => DEFAULT_SORT_FIELD,
-			'sort_by_direction'     => 'desc',
+			'sort_by_field'         => DEFAULT_PAPERS_SORT_FIELD,
+			'sort_by_direction'     => DEFAULT_PAPERS_SORT_DIRECTION,
+			'display_type'          => DEFAULT_PAPERS_DISPLAY_TYPE,
+			'allow_search'          => DEFAULT_PAPERS_ALLOW_SEARCH,
+			'search_query'          => null,
+			'block_id'              => uniqid( 'scholar_scraper_block_' ),
+			'is_ajax'               => 'false',
 		),
 		$atts,
 		'scholar_scraper'
 	);
+
+	$toReturn = '';
 
 	foreach ( $atts as $key => $value ) {
 		if ( is_null( $value ) ) {
@@ -208,8 +215,8 @@ function scholar_scraper_display_result( mixed $atts ): string {
 
 	// On vérifie que l'attribut sort_by_field est bien un champ de la classe ScholarPublication
 	$posibleSortFields = ScholarPublication::get_non_array_fields();
-	if ( ! array_key_exists( strtolower( trim( $atts['sort_by_field'] ) ), $posibleSortFields ) ) {
-		$atts['sort_by_field'] = DEFAULT_SORT_FIELD;
+	if ( ! array_key_exists( trim( $atts['sort_by_field'] ), $posibleSortFields ) ) {
+		$atts['sort_by_field'] = DEFAULT_PAPERS_SORT_FIELD;
 	}
 
 	$sortField = $atts['sort_by_field'];
@@ -218,46 +225,59 @@ function scholar_scraper_display_result( mixed $atts ): string {
 	// On vérifie que l'attribut sort_by_direction est bien une direction de tri possible
 	$posibleSortDirections = array( 'asc', 'desc' );
 	if ( ! in_array( strtolower( trim( $atts['sort_by_direction'] ) ), $posibleSortDirections ) ) {
-		$atts['sort_by_direction'] = DEFAULT_SORT_DIRECTION;
+		$atts['sort_by_direction'] = DEFAULT_PAPERS_SORT_DIRECTION;
 	}
 
 	$sortDirection = $atts['sort_by_direction'];
 
 
-	// Entrée : le fichier contenant les résultats sérialisés n'existe pas ou n'est pas lisible
-	//       => On essaie de voir si le fichier contenant les résultats non sérialisés existe et est lisible
-	if ( ! is_file( SERIALIZED_RESULTS_FILE ) || ! is_readable( SERIALIZED_RESULTS_FILE ) ) {
+	$possibleDisplayTypes = PAPERS_DISPLAY_TYPES;
+	if ( ! array_key_exists( trim( $atts['display_type'] ), $possibleDisplayTypes ) ) {
+		$atts['display_type'] = DEFAULT_PAPERS_DISPLAY_TYPE;
+	}
+	$displayType      = $atts['display_type'];
+	$templateFilePath = PLUGIN_DIR . 'src/Template/' . PAPERS_DISPLAY_TYPES[ $displayType ]['template-file'];
+	$containerClass   = 'scholar-scraper-publications ' . PAPERS_DISPLAY_TYPES[ $displayType ]['container-class'];
 
-		// Entrée : le fichier contenant les résultats non sérialisés n'existe pas ou n'est pas lisible
-		//       => On affiche un message d'erreur
-		if ( ! is_file( RESULTS_FILE ) || ! is_readable( RESULTS_FILE ) ) {
-			return "<p>Unfortunately, our researchers are currently on vacation...<br/>Please try again later.</p>";
+	$searchQuery = null;
+
+	if ( $atts['allow_search'] === 'true' || $atts['allow_search'] === '1' ) {
+
+		$searchQuery = $atts['search_query'];
+
+		$data = [
+			'block_id' => $atts['block_id'] ?? uniqid( 'scholar_scraper_block_' ),
+		];
+
+		if ( $atts['is_ajax'] === 'false' || $atts['is_ajax'] === '0' ) {
+			ob_start();
+			include PLUGIN_DIR . 'src/Template/SearchForm.php';
+			$toReturn .= ob_get_clean();
+		}
+	}
+
+	// On s'assure que le fichier contenant le template existe et est lisible
+	if ( ! is_file( $templateFilePath ) || ! is_readable( $templateFilePath ) ) {
+
+		return "<div class='scholar-scraper-publications error'>
+			<p>Unfortunately, our researchers are currently on vacation...<br/>Please try again later.</p>
+		</div>";
+	}
+
+	$scholarPublicationsCollection = scholar_scraper_get_publications( $searchQuery );
+
+	if ( is_null( $scholarPublicationsCollection ) || ( $totalPapers = $scholarPublicationsCollection->count() ) === 0 ) {
+
+		if ( ! is_null( $searchQuery ) ) {
+			return "<div class='scholar-scraper-publications error'>
+				<p>No publication found for the query <code>$searchQuery</code>.<br/>Please try again later.</p>
+			</div>";
 		}
 
-		$res = file_get_contents( RESULTS_FILE );
-
-		// On décode le résultat en objets PHP
-		$decodedRes = scholar_scraper_decode_results( $res );
-
-		// On serialise le résultat
-		$serialized = serialize( $decodedRes );
-
-		// On écrit le résultat sérialisé dans un fichier
-		scholar_scraper_write_in_file( SERIALIZED_RESULTS_FILE, $serialized, false );
-
+		return "<div class='scholar-scraper-publications error'>
+			<p>Unfortunately, our researchers are currently on vacation...<br/>Please try again later.</p>
+		</div>";
 	}
-
-	// Get the content of the result file
-	$res                           = file_get_contents( SERIALIZED_RESULTS_FILE );
-	$res                           = unserialize( $res );
-	$scholarPublicationsCollection = new ScholarPublicationCollection();
-
-	// Add all the publications of all the users to the collection
-	foreach ( $res as $scholarUser ) {
-		$scholarPublicationsCollection->add( ...$scholarUser->publications->values() );
-	}
-
-	$totalPapers = $scholarPublicationsCollection->count();
 
 	// Order the publications by $atts['sort_by_field']. If the field is the same, the alphabetical order is used on title.
 	// If the $atts['sort_by_field'] is not set, the publication is put at the end of the list.
@@ -307,7 +327,7 @@ function scholar_scraper_display_result( mixed $atts ): string {
 	} );
 
 	// On affiche les publications
-	$toReturn = "<div class='scholar-scraper-publications'>";
+	$toReturn .= "<div class='$containerClass'>";
 
 	for ( $i = 0; $i <= $nbPapersToShow && $i < $totalPapers; $i ++ ) {
 
@@ -317,7 +337,7 @@ function scholar_scraper_display_result( mixed $atts ): string {
 		}
 
 		ob_start();
-		include( PLUGIN_DIR . 'src/Template/PublicationCardTemplate.php' );
+		include( $templateFilePath );
 		$toReturn .= ob_get_clean();
 
 	}

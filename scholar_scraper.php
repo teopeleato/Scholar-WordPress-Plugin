@@ -2,7 +2,7 @@
 /*
  * Plugin Name: Scholar Scraper
  * Description: A plugin that allows you to integrate users' Google Scholar papers into your website.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Guillaume ELAMBERT <guillaume.elambert@yahoo.fr>
  * Author URI: https://elambert-guillau.me
  * Text Domain: scholar-scraper
