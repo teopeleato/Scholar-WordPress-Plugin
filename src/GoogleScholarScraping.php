@@ -249,7 +249,7 @@ function scholar_scraper_display_result( mixed $atts ): string {
 			'block_id' => $atts['block_id'] ?? uniqid( 'scholar_scraper_block_' ),
 		];
 
-		if ( $atts['is_ajax'] === false || $atts['is_ajax'] === 'false' || $atts['is_ajax'] === '0' ) {
+		if ( empty($atts['is_ajax']) || $atts['is_ajax'] === 'false' || $atts['is_ajax'] === '0' ) {
 			ob_start();
 			include PLUGIN_DIR . 'src/Template/SearchForm.php';
 			$toReturn .= ob_get_clean();
