@@ -3,7 +3,6 @@
 use Model\ScholarAuthor;
 use Model\ScholarAuthorCollection;
 use Model\ScholarPublication;
-use Model\ScholarPublicationCollection;
 
 
 // Cron related actions
@@ -188,7 +187,8 @@ function scholar_scraper_display_result( mixed $atts ): string {
 			'allow_search'          => DEFAULT_PAPERS_ALLOW_SEARCH,
 			'search_query'          => null,
 			'block_id'              => uniqid( 'scholar_scraper_block_' ),
-			'is_ajax'               => 'false',
+			'is_ajax'               => false,
+			'number_lines_abstract' => DEFAULT_NUMBER_LINES_ABSTRACT,
 		),
 		$atts,
 		'scholar_scraper'
@@ -249,12 +249,24 @@ function scholar_scraper_display_result( mixed $atts ): string {
 			'block_id' => $atts['block_id'] ?? uniqid( 'scholar_scraper_block_' ),
 		];
 
-		if ( $atts['is_ajax'] === 'false' || $atts['is_ajax'] === '0' ) {
+		if ( $atts['is_ajax'] === false || $atts['is_ajax'] === 'false' || $atts['is_ajax'] === '0' ) {
 			ob_start();
 			include PLUGIN_DIR . 'src/Template/SearchForm.php';
 			$toReturn .= ob_get_clean();
 		}
 	}
+
+	if ( ! is_array( $atts['number_lines_abstract'] ) ) {
+		// Transforme la chaine de caractère en tableau
+		$atts['number_lines_abstract'] = json_decode( $atts['number_lines_abstract'], true );
+	}
+
+	// On vérifie que l'attribut number_lines_abstract est bien un nombre
+	if ( ! isset( $atts['number_lines_abstract'][ $displayType ] ) || ! is_numeric( trim( $atts['number_lines_abstract'][ $displayType ] ) ) || $atts['number_lines_abstract'][ $displayType ] < 0 ) {
+		$atts['number_lines_abstract'][ $displayType ] = DEFAULT_NUMBER_LINES_ABSTRACT[ $displayType ];
+	}
+
+	$numberLinesAbstract = (int) $atts['number_lines_abstract'][ $displayType ];
 
 	// On s'assure que le fichier contenant le template existe et est lisible
 	if ( ! is_file( $templateFilePath ) || ! is_readable( $templateFilePath ) ) {

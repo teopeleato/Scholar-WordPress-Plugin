@@ -81,6 +81,35 @@ if ( ! isset( $publication ) || empty( $publication->title ) ) {
 		<?php
 	}
 
+	if ( ! empty( $publication->abstract ) ) {
+
+		$specificClass         = '';
+		$styleString           = '';
+		$shouldDisplayAbstract = true;
+
+		// Entrée : Le nombre de lignes de l'abstract à afficher est limité
+		//       => On fait le nécessaire pour afficher le nombre lignes demandées
+		if ( isset( $numberLinesAbstract ) ) {
+
+			$shouldDisplayAbstract = $numberLinesAbstract > 0;
+
+			$specificClass = 'content-limited';
+			$styleString   = "style=\"--number-lines:$numberLinesAbstract;\"";
+		}
+
+		if ( $shouldDisplayAbstract ) {
+			?>
+            <!-- On affiche l'abstract de publication -->
+            <div class="scholar-scraper-publication-card-abstract">
+                <strong><u>Abstract :</u></strong>
+                <p class="scholar-scraper-publication-card-abstract-content <?php echo $specificClass; ?>" <?php echo $styleString; ?>>
+					<?php echo $publication->abstract; ?>
+                </p>
+            </div>
+
+		<?php }
+	}
+
 	if ( isset( $url ) ) {
 		echo '</a>';
 	}

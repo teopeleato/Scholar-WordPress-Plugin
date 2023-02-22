@@ -1,6 +1,7 @@
 <?php
 
 use Model\GenericCollection;
+use Model\ScholarAuthorCollection;
 use Model\ScholarPublication;
 use Model\ScholarPublicationCollection;
 
@@ -505,6 +506,11 @@ function scholar_scraper_get_publications( string $searchQuery = null ): ?Schola
 	$res                           = file_get_contents( SERIALIZED_RESULTS_FILE );
 	$res                           = unserialize( $res );
 	$scholarPublicationsCollection = new ScholarPublicationCollection();
+
+	// Ensure that the result is a ScholarAuthorCollection object
+	if ( ! ( $res instanceof ScholarAuthorCollection ) ) {
+		return null;
+	}
 
 	// Add all the publications of all the users to the collection
 	foreach ( $res as $scholarUser ) {

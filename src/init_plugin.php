@@ -288,6 +288,7 @@ function scholar_scraper_custom_block_script_register() {
 			'default_display_type'          => DEFAULT_PAPERS_DISPLAY_TYPE,
 			'default_allow_search'          => DEFAULT_PAPERS_ALLOW_SEARCH,
 			'default_block_id'              => uniqid( 'scholar_scraper_block_' ),
+			'default_number_lines_abstract' => DEFAULT_NUMBER_LINES_ABSTRACT,
 		)
 	);
 
@@ -360,6 +361,19 @@ function scholar_scraper_block_render_callback( array $attributes ): string {
 			continue;
 		}
 
+		$isString = is_string( $value );
+		// Make value a string using json_encode
+		$value = json_encode( $value );
+
+		// Entrée : la valeur était déjà une chaîne de caractères avant json_encode
+		//       => On supprime les deux premiers et deux derniers caractères (les guillemets)
+		if ( $isString ) {
+			$value = substr( $value, 1, - 1 );
+		}
+
+		// Make sure the value is compatible with HTML attributes
+		$value = str_replace( '"', '\\"', $value );
+
 		$attributesString .= sprintf( '%s="%s" ', $key, htmlentities( sanitize_text_field( $value ) ) );
 	}
 
@@ -371,7 +385,6 @@ function scholar_scraper_block_render_callback( array $attributes ): string {
 
 /**
  * Fonction permettant de récupérer les publications correspondant à la requête de recherche (au format HTML).
- * @throws ReflectionException Si une erreur survient lors de la récupération des champs de la classe ScholarPublication.
  * @since 1.1.0
  */
 function scholar_scraper_search_in_papers() {

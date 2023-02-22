@@ -73,17 +73,29 @@ define( 'DEFAULT_PAPERS_SORT_DIRECTION', 'desc' );
  */
 define( 'PAPERS_DISPLAY_TYPES', [
 	'list' => [
-		'template-file'   => 'PublicationListTemplate.php',
-		'name'            => 'List',
-		'container-class' => 'list',
+		'template-file'         => 'PublicationListTemplate.php',
+		'name'                  => 'List',
+		'container-class'       => 'list',
+		'number-lines-abstract' => 0,
 	],
 	'card' => [
-		'template-file'   => 'PublicationCardTemplate.php',
-		'name'            => 'Card',
-		'container-class' => 'card',
+		'template-file'         => 'PublicationCardTemplate.php',
+		'name'                  => 'Card',
+		'container-class'       => 'card',
+		'number-lines-abstract' => 6,
 	],
 
 ] );
+
+
+/**
+ * The default number of lines of the abstract to display depending on the display type of papers.
+ * @since 1.2.0
+ */
+define( 'DEFAULT_NUMBER_LINES_ABSTRACT', array_combine(
+	array_keys( PAPERS_DISPLAY_TYPES ),
+	array_column( PAPERS_DISPLAY_TYPES, 'number-lines-abstract' )
+) );
 
 
 /**

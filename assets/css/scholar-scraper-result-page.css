@@ -2,6 +2,14 @@
     text-align: justify;
 }
 
+.scholar-scraper-publication-card-abstract-content.content-limited {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    /* The variable --number-lines is passed in the element "style" attribute. */
+    -webkit-line-clamp: var(--number-lines);
+    overflow: hidden;
+}
+
 
 /*
     LIST TEMPLATE STYLES

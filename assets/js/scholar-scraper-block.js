@@ -6,7 +6,6 @@ const icon = wp.element.createElement(
     }
 );
 
-
 wp.blocks.registerBlockType('scholar-scraper/scholar-scraper-block', {
     title: 'Scholar Scraper',
     icon: icon,
@@ -35,7 +34,12 @@ wp.blocks.registerBlockType('scholar-scraper/scholar-scraper-block', {
         block_id: {
             type: 'string',
             default: undefined
-        }
+        },
+        // Number of lines to show in the abstract is an array because it can be different for each display type
+        number_lines_abstract: {
+            type: 'object',
+            default: js_data.default_number_lines_abstract
+        },
     },
     edit: function (props) {
 
@@ -50,7 +54,7 @@ wp.blocks.registerBlockType('scholar-scraper/scholar-scraper-block', {
          */
         function updateNumberPaperToShow(event) {
             // Check that the value is a number
-            if (isNaN(event.target.value) || !Number.isInteger(Number(event.target.value)) || event.target.value <= 0) {
+            if (isNaN(event.target.value) || !Number.isInteger(Number(event.target.value)) || event.target.value < 0) {
                 event.preventDefault();
                 return;
             }
@@ -102,15 +106,35 @@ wp.blocks.registerBlockType('scholar-scraper/scholar-scraper-block', {
         /**
          * Function called when the user changes the allow search option.
          * @param event The event that triggered the function.
+         * @since 1.1.0
          */
         function updateAllowSearch(event) {
             // Ensure that the value is a boolean
             if (typeof event.target.checked !== "boolean") {
-                console.log(event.target.checked);
                 event.preventDefault();
                 return;
             }
             props.setAttributes({allow_search: event.target.checked});
+        }
+
+
+        /**
+         * Function called when the user changes the number of lines to show in the abstract.
+         * @param event The event that triggered the function.
+         * @since 1.2.0
+         */
+        function updateAbstractLines(event) {
+            // Check that the value is a number
+            if (isNaN(event.target.value) || !Number.isInteger(Number(event.target.value)) || event.target.value < 0) {
+                event.preventDefault();
+                return;
+            }
+            // Clone the number_lines_abstract object, including the keys
+            // By doing this, we force the block to re-render when setting the new value
+            let new_number_lines_abstract = {...props.attributes.number_lines_abstract};
+            new_number_lines_abstract[props.attributes.display_type] = Number(event.target.value);
+
+            props.setAttributes({number_lines_abstract: new_number_lines_abstract});
         }
 
 
@@ -239,6 +263,23 @@ wp.blocks.registerBlockType('scholar-scraper/scholar-scraper-block', {
                 wp.element.createElement(
                     'label',
                     {
+                        for: "abstract-lines",
+                    },
+                    'Number of lines for the abstract:'
+                ),
+                wp.element.createElement(
+                    'input',
+                    {
+                        name: "abstract-lines",
+                        type: 'number',
+                        min: 0,
+                        value: props.attributes.number_lines_abstract[props.attributes.display_type],
+                        onChange: updateAbstractLines
+                    }
+                ),
+                wp.element.createElement(
+                    'label',
+                    {
                         for: "allow-search",
                     },
                     'Allow users to search for papers?'
@@ -258,4 +299,4 @@ wp.blocks.registerBlockType('scholar-scraper/scholar-scraper-block', {
     save: function (props) {
         return null;
     }
-})
+});
