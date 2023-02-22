@@ -1,11 +1,11 @@
 <?php
 if ( ! isset( $data ) ) {
-	$data = [];
+    $data = [];
 }
 $dataString = "";
 foreach ( $data as $key => $value ) {
-	$value      = esc_attr( $value );
-	$dataString .= "data-$key=\"$value\" ";
+    $value      = esc_attr( $value );
+    $dataString .= "data-$key=\"$value\" ";
 }
 ?>
 <form class="box" id="scholar-scraper-search-form" <?php echo $dataString; ?>>

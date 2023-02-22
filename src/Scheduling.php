@@ -13,45 +13,45 @@ add_filter( 'cron_schedules', 'scholar_scraper_add_custom_cron_intervals' );
  * @since 1.0.0
  */
 function scholar_scraper_add_custom_cron_intervals( array $schedules = [] ): array {
-	if ( empty( CUSTOM_CRON_FREQUENCIES ) ) {
-		return $schedules;
-	}
+    if ( empty( CUSTOM_CRON_FREQUENCIES ) ) {
+        return $schedules;
+    }
 
-	// On récupère les clés du premier élément du tableau $schedules pour
-	// vérifier que les intervals personnalisés suivent le même schéma.
-	if ( empty( $schedules ) ) {
-		$neededKeys = [ 'display', 'interval' ];
-	} else {
-		// Get first element of the $schedules array to get the keys
-		$neededKeys = array_keys( $schedules[ array_key_first( $schedules ) ] );
-	}
-	sort( $neededKeys );
+    // On récupère les clés du premier élément du tableau $schedules pour
+    // vérifier que les intervals personnalisés suivent le même schéma.
+    if ( empty( $schedules ) ) {
+        $neededKeys = [ 'display', 'interval' ];
+    } else {
+        // Get first element of the $schedules array to get the keys
+        $neededKeys = array_keys( $schedules[ array_key_first( $schedules ) ] );
+    }
+    sort( $neededKeys );
 
-	// On parcours les fréquences personnalisées définies dans le fichier de configuration
-	foreach ( CUSTOM_CRON_FREQUENCIES as $frequency => $data ) {
-		// Si mal définie, on passe à la suivante
-		if ( ! is_array( $data ) ) {
-			continue;
-		}
+    // On parcours les fréquences personnalisées définies dans le fichier de configuration
+    foreach ( CUSTOM_CRON_FREQUENCIES as $frequency => $data ) {
+        // Si mal définie, on passe à la suivante
+        if ( ! is_array( $data ) ) {
+            continue;
+        }
 
-		$currentKeys = array_keys( $data );
-		sort( $currentKeys );
+        $currentKeys = array_keys( $data );
+        sort( $currentKeys );
 
-		// On vérifie que les données sont correctes à savoir que c'est un tableau, qu'il n'est pas vide et
-		// qu'il contient 2 éléments dont les clés sont "interval" et "display"
-		if ( empty( $data ) || $neededKeys !== $currentKeys ) {
-			continue;
-		}
+        // On vérifie que les données sont correctes à savoir que c'est un tableau, qu'il n'est pas vide et
+        // qu'il contient 2 éléments dont les clés sont "interval" et "display"
+        if ( empty( $data ) || $neededKeys !== $currentKeys ) {
+            continue;
+        }
 
-		$schedules[ $frequency ] = $data;
-	}
+        $schedules[ $frequency ] = $data;
+    }
 
-	// On trie le tableau par intervalle croissant
-	uasort( $schedules, function ( $a, $b ) {
-		return $a['interval'] <=> $b['interval'];
-	} );
+    // On trie le tableau par intervalle croissant
+    uasort( $schedules, function ( $a, $b ) {
+        return $a['interval'] <=> $b['interval'];
+    } );
 
-	return $schedules;
+    return $schedules;
 }
 
 
@@ -69,22 +69,22 @@ function scholar_scraper_add_custom_cron_intervals( array $schedules = [] ): arr
  */
 function scholar_scraper_schedule_event( string $startingTime = "", string $frequency = "", string $hook = CRON_HOOK_NAME, array $args = [] ): mixed {
 
-	// Si pas de timestamp de début, on calcule le timestamp de début en fonction de l'heure actuelle et de la fréquence
-	if ( empty( $startingTime ) || ! is_numeric( $startingTime ) ) {
-		$startingTime = scholar_scraper_set_specific_time_timestamp();
-	}
+    // Si pas de timestamp de début, on calcule le timestamp de début en fonction de l'heure actuelle et de la fréquence
+    if ( empty( $startingTime ) || ! is_numeric( $startingTime ) ) {
+        $startingTime = scholar_scraper_set_specific_time_timestamp();
+    }
 
-	// Si pas de fréquence, on récupère la valeur enregistrée
-	if ( empty( $frequency ) ) {
-		$frequency = scholar_scraper_get_setting_value( 'CRON_FREQUENCY' );
-	}
+    // Si pas de fréquence, on récupère la valeur enregistrée
+    if ( empty( $frequency ) ) {
+        $frequency = scholar_scraper_get_setting_value( 'CRON_FREQUENCY' );
+    }
 
-	// Check if the event is scheduled
-	if ( wp_get_scheduled_event( CRON_HOOK_NAME ) ) {
-		return false;
-	}
+    // Check if the event is scheduled
+    if ( wp_get_scheduled_event( CRON_HOOK_NAME ) ) {
+        return false;
+    }
 
-	return wp_schedule_event( $startingTime, $frequency, $hook, $args );
+    return wp_schedule_event( $startingTime, $frequency, $hook, $args );
 }
 
 
@@ -98,12 +98,12 @@ function scholar_scraper_schedule_event( string $startingTime = "", string $freq
  * @since 1.0.0
  */
 function scholar_scraper_unschedule_event( string $hookName = CRON_HOOK_NAME ): mixed {
-	// Check if the event is scheduled
-	if ( ! wp_get_scheduled_event( $hookName ) ) {
-		return false;
-	}
+    // Check if the event is scheduled
+    if ( ! wp_get_scheduled_event( $hookName ) ) {
+        return false;
+    }
 
-	return wp_clear_scheduled_hook( $hookName );
+    return wp_clear_scheduled_hook( $hookName );
 }
 
 
@@ -119,27 +119,27 @@ function scholar_scraper_unschedule_event( string $hookName = CRON_HOOK_NAME ): 
  */
 function scholar_scraper_update_schedule_event( string $new_frequency = null, string $startingTime = null ): mixed {
 
-	// Get the default value if not set
-	if ( empty( $new_frequency ) ) {
-		$new_frequency = scholar_scraper_get_setting_value( 'CRON_FREQUENCY' );
-	}
+    // Get the default value if not set
+    if ( empty( $new_frequency ) ) {
+        $new_frequency = scholar_scraper_get_setting_value( 'CRON_FREQUENCY' );
+    }
 
-	$new_interval = scholar_scraper_get_schedule_interval( $new_frequency );
+    $new_interval = scholar_scraper_get_schedule_interval( $new_frequency );
 
-	// Si pas de timestamp de début, on calcule le timestamp de début en fonction de l'heure actuelle et de la fréquence
-	if ( empty( $startingTime ) || ! is_numeric( $startingTime ) ) {
-		$startingTime = scholar_scraper_get_next_specific_timestamp(
-			"",
-			"",
-			$new_interval
-		);
-	}
+    // Si pas de timestamp de début, on calcule le timestamp de début en fonction de l'heure actuelle et de la fréquence
+    if ( empty( $startingTime ) || ! is_numeric( $startingTime ) ) {
+        $startingTime = scholar_scraper_get_next_specific_timestamp(
+            "",
+            "",
+            $new_interval
+        );
+    }
 
-	// Annulation de l'événement cron existant
-	scholar_scraper_unschedule_event();
+    // Annulation de l'événement cron existant
+    scholar_scraper_unschedule_event();
 
-	// Planification de l'événement cron avec la nouvelle fréquence
-	return scholar_scraper_schedule_event( $startingTime, $new_frequency );
+    // Planification de l'événement cron avec la nouvelle fréquence
+    return scholar_scraper_schedule_event( $startingTime, $new_frequency );
 }
 
 
@@ -152,15 +152,15 @@ function scholar_scraper_update_schedule_event( string $new_frequency = null, st
  * @since 1.0.0
  */
 function scholar_scraper_get_schedule_interval( string $frequencyName = "" ): int {
-	// Si pas de fréquence, on récupère la valeur enregistrée
-	if ( empty( $frequencyName ) ) {
-		$frequencyName = scholar_scraper_get_setting_value( 'CRON_FREQUENCY' );
-	}
-	$schedules = wp_get_schedules();
-	if ( ! array_key_exists( $frequencyName, $schedules ) ) {
-		return 0;
-	}
+    // Si pas de fréquence, on récupère la valeur enregistrée
+    if ( empty( $frequencyName ) ) {
+        $frequencyName = scholar_scraper_get_setting_value( 'CRON_FREQUENCY' );
+    }
+    $schedules = wp_get_schedules();
+    if ( ! array_key_exists( $frequencyName, $schedules ) ) {
+        return 0;
+    }
 
-	// On récupère la fréquence
-	return $schedules[ $frequencyName ]['interval'];
+    // On récupère la fréquence
+    return $schedules[ $frequencyName ]['interval'];
 }

@@ -6,22 +6,22 @@
  * @since 1.0.0
  */
 function scholar_scraper_display_settings_form() {
-	?>
+    ?>
     <div class="wrap">
         <h1><?php echo get_admin_page_title() ?></h1>
         <form method="post" action="options.php" id="scholar-scraper-settings-form">
-			<?php
-			// Affiche les champs cachés nécessaires pour la validation
-			settings_fields( OPTION_GROUP );
+            <?php
+            // Affiche les champs cachés nécessaires pour la validation
+            settings_fields( OPTION_GROUP );
 
-			// Affiche la section de paramètres avec les champs de formulaire
-			scholar_scraper_do_settings_sections_tabs( PLUGIN_SLUG );
+            // Affiche la section de paramètres avec les champs de formulaire
+            scholar_scraper_do_settings_sections_tabs( PLUGIN_SLUG );
 
-			submit_button();
-			?>
+            submit_button();
+            ?>
         </form>
     </div>
-	<?php
+    <?php
 }
 
 /**
@@ -34,49 +34,49 @@ function scholar_scraper_display_settings_form() {
  */
 function scholar_scraper_do_settings_sections_tabs( $page ) {
 
-	global $wp_settings_sections, $wp_settings_fields;
+    global $wp_settings_sections, $wp_settings_fields;
 
-	if ( ! isset( $wp_settings_sections[ $page ] ) ) :
-		return;
-	endif;
+    if ( ! isset( $wp_settings_sections[ $page ] ) ) :
+        return;
+    endif;
 
-	$content       = '';
-	$activeSection = null;
-	$activeContent = null;
+    $content       = '';
+    $activeSection = null;
+    $activeContent = null;
 
-	echo '<h2 class="nav-tab-wrapper">';
+    echo '<h2 class="nav-tab-wrapper">';
 
-	foreach ( $wp_settings_sections[ $page ] as $section ) :
-		// Check if the section is the first one
-		$activeSection = $activeSection === null ? ' nav-tab-active' : '';
-		$activeContent = $activeContent === null ? ' section-content-active' : '';
+    foreach ( $wp_settings_sections[ $page ] as $section ) :
+        // Check if the section is the first one
+        $activeSection = $activeSection === null ? ' nav-tab-active' : '';
+        $activeContent = $activeContent === null ? ' section-content-active' : '';
 
-		echo '<a class="nav-tab' . $activeSection . '" data-section="' . $section['id'] . '">' . $section['title'] . '</a>';
+        echo '<a class="nav-tab' . $activeSection . '" data-section="' . $section['id'] . '">' . $section['title'] . '</a>';
 
 
-		$content .= '<div id="content-' . $section['id'] . '" class="section-content' . $activeContent . '" data-section="' . $section['id'] . '">';
-		$content .= '<table class="form-table" role="presentation">';
+        $content .= '<div id="content-' . $section['id'] . '" class="section-content' . $activeContent . '" data-section="' . $section['id'] . '">';
+        $content .= '<table class="form-table" role="presentation">';
 
-		// Grab the content echo from do_settings_fields
-		ob_start();
+        // Grab the content echo from do_settings_fields
+        ob_start();
 
-		// Call the section callback function
-		if ( $section['callback'] ) {
+        // Call the section callback function
+        if ( $section['callback'] ) {
 
-			call_user_func( $section['callback'], $section );
-		}
+            call_user_func( $section['callback'], $section );
+        }
 
-		do_settings_fields( $page, $section['id'] );
-		$content .= ob_get_clean();
-		$content .= '</table></div>';
+        do_settings_fields( $page, $section['id'] );
+        $content .= ob_get_clean();
+        $content .= '</table></div>';
 
-	endforeach;
+    endforeach;
 
-	echo '</h2>';
+    echo '</h2>';
 
-	echo '<div class="tab-content">';
-	echo $content;
-	echo '</div>';
+    echo '<div class="tab-content">';
+    echo $content;
+    echo '</div>';
 
 }
 
@@ -87,9 +87,9 @@ function scholar_scraper_do_settings_sections_tabs( $page ) {
  * @since 1.0.0
  */
 function scholar_scraper_display_scholar_scraper_settings_section() {
-	?>
+    ?>
     <h4 class="section-description">Here are listed the different settings for the Scholar Scraper execution.</h4>
-	<?php
+    <?php
 }
 
 
@@ -99,7 +99,7 @@ function scholar_scraper_display_scholar_scraper_settings_section() {
  * @since 1.0.0
  */
 function scholar_scraper_display_researchers_roles_field() {
-	scholar_scraper_display_select_field( 'RESEARCHERS_ROLES' );
+    scholar_scraper_display_select_field( 'RESEARCHERS_ROLES' );
 }
 
 
@@ -109,7 +109,7 @@ function scholar_scraper_display_researchers_roles_field() {
  * @since 1.0.0
  */
 function scholar_scraper_display_meta_key_scholar_id_field() {
-	scholar_scraper_display_input_field( 'META_KEY_SCHOLAR_ID' );
+    scholar_scraper_display_input_field( 'META_KEY_SCHOLAR_ID' );
 }
 
 
@@ -119,7 +119,7 @@ function scholar_scraper_display_meta_key_scholar_id_field() {
  * @since 1.0.0
  */
 function scholar_scraper_display_threads_field() {
-	scholar_scraper_display_input_field( 'PYTHON_API_THREADS' );
+    scholar_scraper_display_input_field( 'PYTHON_API_THREADS' );
 }
 
 
@@ -129,9 +129,9 @@ function scholar_scraper_display_threads_field() {
  * @since 1.0.0
  */
 function scholar_scraper_display_cron_section() {
-	?>
+    ?>
     <h4 class="section-description">Here are listed the different settings for the cron job.</h4>
-	<?php
+    <?php
 }
 
 
@@ -142,7 +142,7 @@ function scholar_scraper_display_cron_section() {
  * @since 1.0.0
  */
 function scholar_scraper_display_cron_field() {
-	scholar_scraper_display_select_field( 'CRON_FREQUENCY' );
+    scholar_scraper_display_select_field( 'CRON_FREQUENCY' );
 }
 
 
@@ -151,7 +151,7 @@ function scholar_scraper_display_cron_field() {
  * @return void
  */
 function scholar_scraper_display_retry_field() {
-	scholar_scraper_display_input_field( 'CRON_RETRY_AFTER' );
+    scholar_scraper_display_input_field( 'CRON_RETRY_AFTER' );
 }
 
 
@@ -161,9 +161,9 @@ function scholar_scraper_display_retry_field() {
  * @since 1.0.0
  */
 function scholar_scraper_display_python_section() {
-	?>
+    ?>
     <h4 class="section-description">Here are listed the different settings related to the Python configuration.</h4>
-	<?php
+    <?php
 }
 
 
@@ -173,7 +173,7 @@ function scholar_scraper_display_python_section() {
  * @since 1.0.0
  */
 function scholar_scraper_display_python_path_field() {
-	scholar_scraper_display_input_field( 'PYTHON_PATH' );
+    scholar_scraper_display_input_field( 'PYTHON_PATH' );
 }
 
 
@@ -183,7 +183,7 @@ function scholar_scraper_display_python_path_field() {
  * @since 1.0.0
  */
 function scholar_scraper_display_pip_path_field() {
-	scholar_scraper_display_input_field( 'PIP_PATH' );
+    scholar_scraper_display_input_field( 'PIP_PATH' );
 }
 
 
@@ -197,25 +197,25 @@ function scholar_scraper_display_pip_path_field() {
  */
 function scholar_scraper_display_input_field( string $settingAcronym, bool $withLabel = false ) {
 
-	// Si l'acronyme n'existe pas dans le tableau des paramètres du plugin, on arrête le script
-	if ( ! array_key_exists( $settingAcronym, PLUGIN_SETTINGS ) ) {
-		return;
-	}
+    // Si l'acronyme n'existe pas dans le tableau des paramètres du plugin, on arrête le script
+    if ( ! array_key_exists( $settingAcronym, PLUGIN_SETTINGS ) ) {
+        return;
+    }
 
-	$setting = PLUGIN_SETTINGS[ $settingAcronym ];
-	$value   = scholar_scraper_get_setting_value( $settingAcronym );
+    $setting = PLUGIN_SETTINGS[ $settingAcronym ];
+    $value   = scholar_scraper_get_setting_value( $settingAcronym );
 
-	echo scholar_scraper_html_input_field(
-		scholar_scraper_get_setting_name( $settingAcronym ),
-		$setting['type'] ?? 'text',
-		$value,
-		$setting['pattern'] ?? null,
-		$setting['placeholder'] ?? null,
-			$setting['id'] ?? isset( $setting['name'] ) ? strtolower( $setting['name'] ) . '_field' : null,
-		( $withLabel && ! empty( $setting['label'] ) ) ? $setting['label'] : null,
-		$setting['min'] ?? null,
-		$setting['max'] ?? null
-	);
+    echo scholar_scraper_html_input_field(
+        scholar_scraper_get_setting_name( $settingAcronym ),
+        $setting['type'] ?? 'text',
+        $value,
+        $setting['pattern'] ?? null,
+        $setting['placeholder'] ?? null,
+            $setting['id'] ?? isset( $setting['name'] ) ? strtolower( $setting['name'] ) . '_field' : null,
+        ( $withLabel && ! empty( $setting['label'] ) ) ? $setting['label'] : null,
+        $setting['min'] ?? null,
+        $setting['max'] ?? null
+    );
 }
 
 
@@ -237,33 +237,33 @@ function scholar_scraper_display_input_field( string $settingAcronym, bool $with
  */
 function scholar_scraper_html_input_field( string $settingName, string $type = null, string $value = null, string $pattern = null, string $placeholder = null, string $id = null, string $label = null, int $min = null, int $max = null ): string {
 
-	$htmlField = '';
+    $htmlField = '';
 
-	if ( empty( $id ) ) {
-		$id = $settingName;
-	}
+    if ( empty( $id ) ) {
+        $id = $settingName;
+    }
 
-	if ( ! isset( $placeholder ) ) {
-		$placeholder = '';
-	}
+    if ( ! isset( $placeholder ) ) {
+        $placeholder = '';
+    }
 
-	if ( ! empty( $label ) ) {
-		$htmlField .= sprintf( '<label for="%s">%s</label>', $id, $label );
-	}
+    if ( ! empty( $label ) ) {
+        $htmlField .= sprintf( '<label for="%s">%s</label>', $id, $label );
+    }
 
-	$htmlField .= sprintf(
-		'<input name="%s" id="%s" %s %s %s %s %s %s>',
-		esc_attr( $settingName ),
-		esc_attr( $id ),
-		! is_null( $type ) ? 'type="' . esc_attr( $type ) . '"' : '',
-		! is_null( $value ) ? 'value="' . esc_attr( $value ) . '"' : '',
-		! is_null( $placeholder ) ? 'placeholder="' . esc_attr( $placeholder ) . '"' : '',
-		! is_null( $pattern ) ? 'pattern="' . esc_attr( $pattern ) . '"' : '',
-		! is_null( $min ) ? 'min="' . esc_attr( $min ) . '"' : '',
-		! is_null( $max ) ? 'max="' . esc_attr( $max ) . '"' : ''
-	);
+    $htmlField .= sprintf(
+        '<input name="%s" id="%s" %s %s %s %s %s %s>',
+        esc_attr( $settingName ),
+        esc_attr( $id ),
+        ! is_null( $type ) ? 'type="' . esc_attr( $type ) . '"' : '',
+        ! is_null( $value ) ? 'value="' . esc_attr( $value ) . '"' : '',
+        ! is_null( $placeholder ) ? 'placeholder="' . esc_attr( $placeholder ) . '"' : '',
+        ! is_null( $pattern ) ? 'pattern="' . esc_attr( $pattern ) . '"' : '',
+        ! is_null( $min ) ? 'min="' . esc_attr( $min ) . '"' : '',
+        ! is_null( $max ) ? 'max="' . esc_attr( $max ) . '"' : ''
+    );
 
-	return $htmlField;
+    return $htmlField;
 }
 
 /**
@@ -276,27 +276,27 @@ function scholar_scraper_html_input_field( string $settingName, string $type = n
  */
 function scholar_scraper_display_select_field( string $settingAcronym, bool $withLabel = false ) {
 
-	// Si l'acronyme n'existe pas dans le tableau des paramètres du plugin, on arrête le script
-	if ( ! array_key_exists( $settingAcronym, PLUGIN_SETTINGS ) ) {
-		return;
-	}
+    // Si l'acronyme n'existe pas dans le tableau des paramètres du plugin, on arrête le script
+    if ( ! array_key_exists( $settingAcronym, PLUGIN_SETTINGS ) ) {
+        return;
+    }
 
-	$setting = PLUGIN_SETTINGS[ $settingAcronym ];
-	$value   = scholar_scraper_get_setting_value( $settingAcronym );
+    $setting = PLUGIN_SETTINGS[ $settingAcronym ];
+    $value   = scholar_scraper_get_setting_value( $settingAcronym );
 
 
-	if ( ! is_array( $value ) ) {
-		$value = [ $value ];
-	}
+    if ( ! is_array( $value ) ) {
+        $value = [ $value ];
+    }
 
-	echo scholar_scraper_html_select_field(
-		scholar_scraper_get_setting_name( $settingAcronym ),
-		$setting['options'],
-		$value,
-		$setting['type'] === 'multiselect',
-			$setting['id'] ?? isset( $setting['name'] ) ? strtolower( $setting['name'] ) . '_field' : null,
-		( $withLabel && ! empty( $setting['label'] ) ) ? $setting['label'] : null
-	);
+    echo scholar_scraper_html_select_field(
+        scholar_scraper_get_setting_name( $settingAcronym ),
+        $setting['options'],
+        $value,
+        $setting['type'] === 'multiselect',
+            $setting['id'] ?? isset( $setting['name'] ) ? strtolower( $setting['name'] ) . '_field' : null,
+        ( $withLabel && ! empty( $setting['label'] ) ) ? $setting['label'] : null
+    );
 }
 
 
@@ -315,33 +315,33 @@ function scholar_scraper_display_select_field( string $settingAcronym, bool $wit
  */
 function scholar_scraper_html_select_field( string $settingName, array $values, array $selectedValues, bool $isMultiple = false, string $id = null, string $label = null ): string {
 
-	$htmlField = '';
+    $htmlField = '';
 
-	if ( empty( $id ) ) {
-		$id = $settingName;
-	}
+    if ( empty( $id ) ) {
+        $id = $settingName;
+    }
 
-	if ( ! empty( $label ) ) {
-		$htmlField .= sprintf( '<label for="%s">%s</label>', $id, $label );
-	}
+    if ( ! empty( $label ) ) {
+        $htmlField .= sprintf( '<label for="%s">%s</label>', $id, $label );
+    }
 
-	$htmlField .= sprintf(
-		'<select name="%s" id="%s" %s>',
-		esc_attr( $isMultiple ? $settingName . '[]' : $settingName ),
-		esc_attr( $id ),
-		esc_attr( $isMultiple ? 'multiple' : '' ),
-	);
+    $htmlField .= sprintf(
+        '<select name="%s" id="%s" %s>',
+        esc_attr( $isMultiple ? $settingName . '[]' : $settingName ),
+        esc_attr( $id ),
+        esc_attr( $isMultiple ? 'multiple' : '' ),
+    );
 
-	foreach ( $values as $value => $label ) {
-		$htmlField .= sprintf(
-			'<option value="%s" %s>%s</option>',
-			esc_attr( $value ),
-			in_array( $value, $selectedValues ) ? 'selected' : '',
-			esc_attr( $label )
-		);
-	}
+    foreach ( $values as $value => $label ) {
+        $htmlField .= sprintf(
+            '<option value="%s" %s>%s</option>',
+            esc_attr( $value ),
+            in_array( $value, $selectedValues ) ? 'selected' : '',
+            esc_attr( $label )
+        );
+    }
 
-	$htmlField .= '</select>';
+    $htmlField .= '</select>';
 
-	return $htmlField;
+    return $htmlField;
 }

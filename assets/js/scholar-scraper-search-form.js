@@ -61,6 +61,8 @@ jQuery(document).ready(function ($) {
                 return;
             }
 
+            console.log('searchQuery: ', searchQuery);
+
 
             $.ajax({
                 url: js_data.ajax_url ?? '/wp-admin/admin-ajax.php',

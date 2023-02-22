@@ -11,17 +11,17 @@ use Model\ScholarPublicationCollection;
  * @since 1.0.0
  */
 abstract class LOG_TYPE {
-	const INFO = "INFO";
-	const WARNING = "WARNING";
-	const ERROR = "ERROR";
-	const SUCCESS = "SUCCESS";
+    const INFO = "INFO";
+    const WARNING = "WARNING";
+    const ERROR = "ERROR";
+    const SUCCESS = "SUCCESS";
 
-	const ALL = [
-		self::INFO,
-		self::WARNING,
-		self::ERROR,
-		self::SUCCESS
-	];
+    const ALL = [
+        self::INFO,
+        self::WARNING,
+        self::ERROR,
+        self::SUCCESS
+    ];
 }
 
 /**
@@ -31,27 +31,27 @@ abstract class LOG_TYPE {
  */
 function scholar_scraper_get_settings_or_default() {
 
-	$default = [];
+    $default = [];
 
-	foreach ( PLUGIN_SETTINGS as $setting_acronym => $setting ) {
-		$default[ $setting['name'] ] = scholar_scraper_get_default_value( $setting_acronym );
-	}
+    foreach ( PLUGIN_SETTINGS as $setting_acronym => $setting ) {
+        $default[ $setting['name'] ] = scholar_scraper_get_default_value( $setting_acronym );
+    }
 
-	$settings = get_option( OPTION_GROUP );
+    $settings = get_option( OPTION_GROUP );
 
-	if ( is_null( $settings ) || $settings === false ) {
-		return $default;
-	}
+    if ( is_null( $settings ) || $settings === false ) {
+        return $default;
+    }
 
-	// Remove all keys that are not in the default settings
-	$settings = array_intersect_key( $settings, $default );
+    // Remove all keys that are not in the default settings
+    $settings = array_intersect_key( $settings, $default );
 
-	// Sanitize settings
-	$settings = scholar_scraper_sanitize_settings( $settings, false );
-	// Add all keys that are not in the settings
-	$settings = array_merge( $default, $settings );
+    // Sanitize settings
+    $settings = scholar_scraper_sanitize_settings( $settings, false );
+    // Add all keys that are not in the settings
+    $settings = array_merge( $default, $settings );
 
-	return $settings;
+    return $settings;
 }
 
 
@@ -62,8 +62,8 @@ function scholar_scraper_get_settings_or_default() {
  * @since 1.0.0
  */
 function scholar_scraper_set_default_settings(): void {
-	$settings = scholar_scraper_get_settings_or_default();
-	update_option( OPTION_GROUP, $settings );
+    $settings = scholar_scraper_get_settings_or_default();
+    update_option( OPTION_GROUP, $settings );
 }
 
 
@@ -76,68 +76,68 @@ function scholar_scraper_set_default_settings(): void {
  * @since 1.0.0
  */
 function scholar_scraper_get_setting_value( string $setting_acronym ): mixed {
-	$settings = get_option( OPTION_GROUP );
+    $settings = get_option( OPTION_GROUP );
 
-	if ( ! isset( PLUGIN_SETTINGS[ $setting_acronym ] ) ) {
-		return null;
-	}
+    if ( ! isset( PLUGIN_SETTINGS[ $setting_acronym ] ) ) {
+        return null;
+    }
 
-	$requestedSetting = PLUGIN_SETTINGS[ $setting_acronym ];
+    $requestedSetting = PLUGIN_SETTINGS[ $setting_acronym ];
 
-	if ( empty( $settings[ $requestedSetting['name'] ] ) ) {
-		return scholar_scraper_get_default_value( $setting_acronym );
-	}
+    if ( empty( $settings[ $requestedSetting['name'] ] ) ) {
+        return scholar_scraper_get_default_value( $setting_acronym );
+    }
 
-	// If the type is input, check that the value matches the regex
-	if ( $requestedSetting['type'] === 'input' ) {
+    // If the type is input, check that the value matches the regex
+    if ( $requestedSetting['type'] === 'input' ) {
 
-		if ( ! isset( $requestedSetting['regex'] ) ) {
-			return $settings[ $requestedSetting['name'] ];
-		}
+        if ( ! isset( $requestedSetting['regex'] ) ) {
+            return $settings[ $requestedSetting['name'] ];
+        }
 
-		$regex = $requestedSetting['regex'];
+        $regex = $requestedSetting['regex'];
 
-		if ( ! preg_match( $regex, $settings[ $requestedSetting['name'] ] ) ) {
-			return scholar_scraper_get_default_value( $setting_acronym );
-		}
+        if ( ! preg_match( $regex, $settings[ $requestedSetting['name'] ] ) ) {
+            return scholar_scraper_get_default_value( $setting_acronym );
+        }
 
-	} elseif ( $requestedSetting['type'] === 'number' ) {
+    } elseif ( $requestedSetting['type'] === 'number' ) {
 
-		if ( ! is_numeric( $settings[ $requestedSetting['name'] ] ) ) {
-			return scholar_scraper_get_default_value( $setting_acronym );
-		}
+        if ( ! is_numeric( $settings[ $requestedSetting['name'] ] ) ) {
+            return scholar_scraper_get_default_value( $setting_acronym );
+        }
 
-		if ( isset( $requestedSetting['min'] ) && $settings[ $requestedSetting['name'] ] < $requestedSetting['min'] ) {
-			return scholar_scraper_get_default_value( $setting_acronym );
-		}
+        if ( isset( $requestedSetting['min'] ) && $settings[ $requestedSetting['name'] ] < $requestedSetting['min'] ) {
+            return scholar_scraper_get_default_value( $setting_acronym );
+        }
 
-		if ( isset( $requestedSetting['max'] ) && $settings[ $requestedSetting['name'] ] > $requestedSetting['max'] ) {
-			return scholar_scraper_get_default_value( $setting_acronym );
-		}
+        if ( isset( $requestedSetting['max'] ) && $settings[ $requestedSetting['name'] ] > $requestedSetting['max'] ) {
+            return scholar_scraper_get_default_value( $setting_acronym );
+        }
 
-	} elseif ( $requestedSetting['type'] === 'select' ) {
-		$allowed_values = array_keys( $requestedSetting['options'] );
+    } elseif ( $requestedSetting['type'] === 'select' ) {
+        $allowed_values = array_keys( $requestedSetting['options'] );
 
-		if ( ! in_array( $settings[ $requestedSetting['name'] ], $allowed_values ) ) {
-			return scholar_scraper_get_default_value( $setting_acronym );
-		}
+        if ( ! in_array( $settings[ $requestedSetting['name'] ], $allowed_values ) ) {
+            return scholar_scraper_get_default_value( $setting_acronym );
+        }
 
-	} elseif ( $requestedSetting['type'] === 'multi_select' ) {
-		$allowed_values  = array_keys( $requestedSetting['options'] );
-		$selected_values = $settings[ $requestedSetting['name'] ];
+    } elseif ( $requestedSetting['type'] === 'multi_select' ) {
+        $allowed_values  = array_keys( $requestedSetting['options'] );
+        $selected_values = $settings[ $requestedSetting['name'] ];
 
-		if ( ! is_array( $selected_values ) ) {
-			return scholar_scraper_get_default_value( $setting_acronym );
-		}
+        if ( ! is_array( $selected_values ) ) {
+            return scholar_scraper_get_default_value( $setting_acronym );
+        }
 
-		foreach ( $selected_values as $selected_value ) {
-			if ( ! in_array( $selected_value, $allowed_values ) ) {
-				return scholar_scraper_get_default_value( $setting_acronym );
-			}
-		}
-	}
+        foreach ( $selected_values as $selected_value ) {
+            if ( ! in_array( $selected_value, $allowed_values ) ) {
+                return scholar_scraper_get_default_value( $setting_acronym );
+            }
+        }
+    }
 
-	return $settings[ $requestedSetting['name'] ];
+    return $settings[ $requestedSetting['name'] ];
 }
 
 
@@ -150,11 +150,11 @@ function scholar_scraper_get_setting_value( string $setting_acronym ): mixed {
  * @since 1.0.0
  */
 function scholar_scraper_get_setting_name( string $setting_acronym ): ?string {
-	if ( ! isset( PLUGIN_SETTINGS[ $setting_acronym ] ) ) {
-		return null;
-	}
+    if ( ! isset( PLUGIN_SETTINGS[ $setting_acronym ] ) ) {
+        return null;
+    }
 
-	return sprintf( "%s[%s]", OPTION_GROUP, PLUGIN_SETTINGS[ $setting_acronym ]['name'] );
+    return sprintf( "%s[%s]", OPTION_GROUP, PLUGIN_SETTINGS[ $setting_acronym ]['name'] );
 }
 
 
@@ -165,9 +165,9 @@ function scholar_scraper_get_setting_name( string $setting_acronym ): ?string {
  * @since 1.0.0
  */
 function scholar_scraper_get_settings_names(): array {
-	return array_map( function ( $setting ) {
-		return $setting['name'];
-	}, PLUGIN_SETTINGS );
+    return array_map( function ( $setting ) {
+        return $setting['name'];
+    }, PLUGIN_SETTINGS );
 }
 
 
@@ -180,7 +180,7 @@ function scholar_scraper_get_settings_names(): array {
  * @since 1.0.0
  */
 function scholar_scraper_is_plugin_setting( string $setting_name ): bool {
-	return in_array( $setting_name, scholar_scraper_get_settings_names() );
+    return in_array( $setting_name, scholar_scraper_get_settings_names() );
 }
 
 
@@ -195,31 +195,31 @@ function scholar_scraper_is_plugin_setting( string $setting_name ): bool {
  */
 function scholar_scraper_set_specific_time_timestamp( string $timestamp = "", string $wanted_time = "" ): string {
 
-	// Entrée : Aucun timestamp ou timestamp invalide
-	if ( empty( $timestamp ) || ! is_numeric( $timestamp ) ) {
-		$timestamp = time();
-	}
+    // Entrée : Aucun timestamp ou timestamp invalide
+    if ( empty( $timestamp ) || ! is_numeric( $timestamp ) ) {
+        $timestamp = time();
+    }
 
-	// Entrée : Aucune heure
-	if ( empty( $wanted_time ) ) {
-		$wanted_time = STARTING_CRON_TIME;
-	}
+    // Entrée : Aucune heure
+    if ( empty( $wanted_time ) ) {
+        $wanted_time = STARTING_CRON_TIME;
+    }
 
-	// Entrée : L'heure n'est pas au bon format (H:i:s)
-	if ( ! preg_match( '/^([0-1][0-9]|2[0-3])(:[0-5][0-9]){2}$/', $wanted_time ) ) {
-		return $timestamp;
-	}
+    // Entrée : L'heure n'est pas au bon format (H:i:s)
+    if ( ! preg_match( '/^([0-1][0-9]|2[0-3])(:[0-5][0-9]){2}$/', $wanted_time ) ) {
+        return $timestamp;
+    }
 
-	// Conversion du timestamp en date
-	$currentDate = DateTime::createFromFormat( 'U', $timestamp );
-	// Conversion de l'heure en date
-	$wantedTimeDate = DateTime::createFromFormat( 'H:i:s', $wanted_time );
+    // Conversion du timestamp en date
+    $currentDate = DateTime::createFromFormat( 'U', $timestamp );
+    // Conversion de l'heure en date
+    $wantedTimeDate = DateTime::createFromFormat( 'H:i:s', $wanted_time );
 
-	// Modification de l'heure de la date
-	$currentDate->setTime( $wantedTimeDate->format( 'H' ), $wantedTimeDate->format( 'i' ), $wantedTimeDate->format( 's' ) );
+    // Modification de l'heure de la date
+    $currentDate->setTime( $wantedTimeDate->format( 'H' ), $wantedTimeDate->format( 'i' ), $wantedTimeDate->format( 's' ) );
 
-	// Conversion de la date en timestamp
-	return $currentDate->getTimestamp();
+    // Conversion de la date en timestamp
+    return $currentDate->getTimestamp();
 }
 
 
@@ -234,25 +234,25 @@ function scholar_scraper_set_specific_time_timestamp( string $timestamp = "", st
  * @since 1.0.0
  */
 function scholar_scraper_get_next_specific_timestamp( string $timestamp = "", string $wanted_time = "", int $interval = 0 ): string {
-	$timestamp = scholar_scraper_set_specific_time_timestamp( $timestamp, $wanted_time );
+    $timestamp = scholar_scraper_set_specific_time_timestamp( $timestamp, $wanted_time );
 
-	// Si le timestamp est supérieur à la date actuelle, on renvoie le timestamp qui match l'heure voulue
-	if ( $timestamp > time() ) {
-		return $timestamp;
-	}
+    // Si le timestamp est supérieur à la date actuelle, on renvoie le timestamp qui match l'heure voulue
+    if ( $timestamp > time() ) {
+        return $timestamp;
+    }
 
-	if ( $interval == 0 ) {
-		return time();
-	}
+    if ( $interval == 0 ) {
+        return time();
+    }
 
-	// Sinon, on trouve le prochain timestamp qui match l'heure voulue et l'intervalle
-	$nextTimestamp = $timestamp;
+    // Sinon, on trouve le prochain timestamp qui match l'heure voulue et l'intervalle
+    $nextTimestamp = $timestamp;
 
-	while ( $nextTimestamp < time() ) {
-		$nextTimestamp += $interval;
-	}
+    while ( $nextTimestamp < time() ) {
+        $nextTimestamp += $interval;
+    }
 
-	return $nextTimestamp;
+    return $nextTimestamp;
 }
 
 
@@ -268,31 +268,31 @@ function scholar_scraper_get_next_specific_timestamp( string $timestamp = "", st
  * @since 1.0.0
  */
 function scholar_scraper_write_in_file( string $filePath, string $content, bool $append = true, bool $add_new_line = true ): bool {
-	if ( empty( $content ) || empty( $filePath ) ) {
-		return false;
-	}
+    if ( empty( $content ) || empty( $filePath ) ) {
+        return false;
+    }
 
-	// Check if $message contains PHP_EOL at the end
-	if ( $add_new_line && substr( $content, - 1 ) != PHP_EOL ) {
-		$content .= PHP_EOL;
-	}
+    // Check if $message contains PHP_EOL at the end
+    if ( $add_new_line && substr( $content, - 1 ) != PHP_EOL ) {
+        $content .= PHP_EOL;
+    }
 
-	$mode = $append ? "a" : "w";
+    $mode = $append ? "a" : "w";
 
 
-	# Print the error message in the log.txt file
-	$file = fopen( $filePath, $mode );
+    # Print the error message in the log.txt file
+    $file = fopen( $filePath, $mode );
 
-	// Check if the file has been opened
-	if ( $file === false ) {
-		return false;
-	}
+    // Check if the file has been opened
+    if ( $file === false ) {
+        return false;
+    }
 
-	$toReturn = fwrite( $file, $content );
-	fclose( $file );
+    $toReturn = fwrite( $file, $content );
+    fclose( $file );
 
-	// Convert $toReturn to boolean because it could be an integer
-	return ( $toReturn !== false );
+    // Convert $toReturn to boolean because it could be an integer
+    return ( $toReturn !== false );
 }
 
 
@@ -307,24 +307,24 @@ function scholar_scraper_write_in_file( string $filePath, string $content, bool 
  */
 function scholar_scraper_log( string $logType, string $message ): bool {
 
-	// Entrée : Le message est vide
-	//       => On ne crée pas de log
-	if ( empty( $message ) ) {
-		return false;
-	}
+    // Entrée : Le message est vide
+    //       => On ne crée pas de log
+    if ( empty( $message ) ) {
+        return false;
+    }
 
-	// Entrée : Le type de message n'est pas valide
-	//       => On ne crée pas de log
-	if ( ! in_array( $logType, LOG_TYPE::ALL ) ) {
-		return false;
-	}
+    // Entrée : Le type de message n'est pas valide
+    //       => On ne crée pas de log
+    if ( ! in_array( $logType, LOG_TYPE::ALL ) ) {
+        return false;
+    }
 
-	// On récupère la longueur maximale des types de messages
-	$maxLength = max( array_map( 'strlen', LOG_TYPE::ALL ) ) + 3;
-	// On ajoute le timestamp et le type de message au message
-	$message = sprintf( "%s\t%-{$maxLength}s ", date( "Y-m-d H:i:s" ), $logType ) . $message;
+    // On récupère la longueur maximale des types de messages
+    $maxLength = max( array_map( 'strlen', LOG_TYPE::ALL ) ) + 3;
+    // On ajoute le timestamp et le type de message au message
+    $message = sprintf( "%s\t%-{$maxLength}s ", date( "Y-m-d H:i:s" ), $logType ) . $message;
 
-	return scholar_scraper_write_in_file( LOG_FILE, $message );
+    return scholar_scraper_write_in_file( LOG_FILE, $message );
 }
 
 
@@ -333,70 +333,70 @@ function scholar_scraper_log( string $logType, string $message ): bool {
  * @param $class string Class name
  *
  * @return mixed Object of class $class
- * @throws ReflectionException
+ * @throws ReflectionException If the class doesn't exist.
  * @since 1.0.0
  */
 function scholar_scraper_cast_object_to_class( mixed $object, string $class ) {
 
-	if ( ! class_exists( $class ) ) {
-		return "Class $class doesn't exist";
-	}
+    if ( ! class_exists( $class ) ) {
+        return "Class $class doesn't exist";
+    }
 
-	// Check if $object is an array or an object
-	if ( ! is_array( $object ) && ! is_object( $object ) ) {
-		return "Object is not an array or an object";
-	}
+    // Check if $object is an array or an object
+    if ( ! is_array( $object ) && ! is_object( $object ) ) {
+        return "Object is not an array or an object";
+    }
 
-	// On créé un objet de la class $class
-	$castedObject = new $class();
-	// On récupère les informations de la classe $class
-	$reflection = new ReflectionClass( $class );
+    // On créé un objet de la class $class
+    $castedObject = new $class();
+    // On récupère les informations de la classe $class
+    $reflection = new ReflectionClass( $class );
 
-	// On parcours les attributs de l'objet
-	foreach ( $object as $key => $value ) {
+    // On parcours les attributs de l'objet
+    foreach ( $object as $key => $value ) {
 
-		// Entrée : l'attribut $key n'existe pas dans la class $class
-		//       => Erreur
-		if ( ! property_exists( $class, $key ) ) {
-			continue;
-		}
+        // Entrée : l'attribut $key n'existe pas dans la class $class
+        //       => Erreur
+        if ( ! property_exists( $class, $key ) ) {
+            continue;
+        }
 
-		// On récupère la classe de l'attribut $key de $class
-		$property = $reflection->getProperty( $key );
-		$property->setAccessible( true );
-		$propertyClass = $property->getType()->getName();
+        // On récupère la classe de l'attribut $key de $class
+        $property = $reflection->getProperty( $key );
+        $property->setAccessible( true );
+        $propertyClass = $property->getType()->getName();
 
 
-		// Entrée : l'attribut $key de $class est un objet qui étend GenericCollection
-		//       => On caste la valeur en tableau d'objets de la classe $propertyClass::$itemClass
-		if ( ! empty( $propertyClass ) && is_subclass_of( $propertyClass, GenericCollection::class ) ) {
+        // Entrée : l'attribut $key de $class est un objet qui étend GenericCollection
+        //       => On caste la valeur en tableau d'objets de la classe $propertyClass::$itemClass
+        if ( ! empty( $propertyClass ) && is_subclass_of( $propertyClass, GenericCollection::class ) ) {
 
-			// Entrée : La valeur est un objet et non un tableau
-			//       => On met l'objet dans un tableau
-			if ( ! is_array( $value ) || ! is_numeric( array_key_first( $value ) ) ) {
-				$value = [ $value ];
-			}
+            // Entrée : La valeur est un objet et non un tableau
+            //       => On met l'objet dans un tableau
+            if ( ! is_array( $value ) || ! is_numeric( array_key_first( $value ) ) ) {
+                $value = [ $value ];
+            }
 
-			// On caste chaque objet du tableau en objet de la classe $propertyClass::$itemClass
-			$arrayObjects = [];
+            // On caste chaque objet du tableau en objet de la classe $propertyClass::$itemClass
+            $arrayObjects = [];
 
-			// On caste chaque objet du tableau en objet de la classe $propertyClass::$itemClass
-			foreach ( $value as $item ) {
-				$arrayObjects[] = scholar_scraper_cast_object_to_class( $item, $propertyClass::$itemClass );
-			}
+            // On caste chaque objet du tableau en objet de la classe $propertyClass::$itemClass
+            foreach ( $value as $item ) {
+                $arrayObjects[] = scholar_scraper_cast_object_to_class( $item, $propertyClass::$itemClass );
+            }
 
-			// On ajoute le tableau d'objets à l'objet $castedObject
-			$castedObject->$key = new $propertyClass( ...$arrayObjects );
+            // On ajoute le tableau d'objets à l'objet $castedObject
+            $castedObject->$key = new $propertyClass( ...$arrayObjects );
 
-			continue;
+            continue;
 
-		}
+        }
 
-		$castedObject->$key = $value;
+        $castedObject->$key = $value;
 
-	}
+    }
 
-	return $castedObject;
+    return $castedObject;
 }
 
 
@@ -409,9 +409,9 @@ function scholar_scraper_cast_object_to_class( mixed $object, string $class ) {
  * @since 1.0.0
  */
 function scholar_scraper_get_users_having_role( string $role ): array {
-	$users = get_users( [ 'role' => $role ] );
+    $users = get_users( [ 'role' => $role ] );
 
-	return $users;
+    return $users;
 }
 
 
@@ -424,17 +424,17 @@ function scholar_scraper_get_users_having_role( string $role ): array {
  * @since 1.0.0
  */
 function scholar_scraper_get_users_with_meta_having_role( string $role ): array {
-	$users = scholar_scraper_get_users_having_role( $role );
+    $users = scholar_scraper_get_users_having_role( $role );
 
-	$usersWithMeta = [];
+    $usersWithMeta = [];
 
-	foreach ( $users as $user ) {
+    foreach ( $users as $user ) {
 
-		$user->meta      = get_user_meta( $user->ID );
-		$usersWithMeta[] = $user;
-	}
+        $user->meta      = get_user_meta( $user->ID );
+        $usersWithMeta[] = $user;
+    }
 
-	return $usersWithMeta;
+    return $usersWithMeta;
 }
 
 
@@ -448,17 +448,17 @@ function scholar_scraper_get_users_with_meta_having_role( string $role ): array 
  * @since 1.0.0
  */
 function scholar_scraper_get_list_meta_key( string $role, string $metaKey ): array {
-	$users = scholar_scraper_get_users_with_meta_having_role( $role );
+    $users = scholar_scraper_get_users_with_meta_having_role( $role );
 
-	$list = [];
+    $list = [];
 
-	foreach ( $users as $user ) {
-		if ( isset( $user->meta[ $metaKey ] ) && ! empty( $user->meta[ $metaKey ][0] ) ) {
-			$list[] = $user->meta[ $metaKey ][0];
-		}
-	}
+    foreach ( $users as $user ) {
+        if ( isset( $user->meta[ $metaKey ] ) && ! empty( $user->meta[ $metaKey ][0] ) ) {
+            $list[] = $user->meta[ $metaKey ][0];
+        }
+    }
 
-	return $list;
+    return $list;
 }
 
 
@@ -479,109 +479,109 @@ function scholar_scraper_get_list_meta_key( string $role, string $metaKey ): arr
  * @since 1.1.0
  */
 function scholar_scraper_get_publications( string $searchQuery = null ): ?ScholarPublicationCollection {
-	// Entrée : le fichier contenant les résultats sérialisés n'existe pas ou n'est pas lisible
-	//       => On essaie de voir si le fichier contenant les résultats non sérialisés existe et est lisible
-	if ( ! is_file( SERIALIZED_RESULTS_FILE ) || ! is_readable( SERIALIZED_RESULTS_FILE ) ) {
+    // Entrée : le fichier contenant les résultats sérialisés n'existe pas ou n'est pas lisible
+    //       => On essaie de voir si le fichier contenant les résultats non sérialisés existe et est lisible
+    if ( ! is_file( SERIALIZED_RESULTS_FILE ) || ! is_readable( SERIALIZED_RESULTS_FILE ) ) {
 
-		// Entrée : le fichier contenant les résultats non sérialisés n'existe pas ou n'est pas lisible
-		//       => On affiche un message d'erreur
-		if ( ! is_file( RESULTS_FILE ) || ! is_readable( RESULTS_FILE ) ) {
-			return null;
-		}
+        // Entrée : le fichier contenant les résultats non sérialisés n'existe pas ou n'est pas lisible
+        //       => On affiche un message d'erreur
+        if ( ! is_file( RESULTS_FILE ) || ! is_readable( RESULTS_FILE ) ) {
+            return null;
+        }
 
-		$res = file_get_contents( RESULTS_FILE );
+        $res = file_get_contents( RESULTS_FILE );
 
-		// On décode le résultat en objets PHP
-		$decodedRes = scholar_scraper_decode_results( $res );
+        // On décode le résultat en objets PHP
+        $decodedRes = scholar_scraper_decode_results( $res );
 
-		// On serialise le résultat
-		$serialized = serialize( $decodedRes );
+        // On serialise le résultat
+        $serialized = serialize( $decodedRes );
 
-		// On écrit le résultat sérialisé dans un fichier
-		scholar_scraper_write_in_file( SERIALIZED_RESULTS_FILE, $serialized, false );
+        // On écrit le résultat sérialisé dans un fichier
+        scholar_scraper_write_in_file( SERIALIZED_RESULTS_FILE, $serialized, false );
 
-	}
+    }
 
-	// Get the content of the result file
-	$res                           = file_get_contents( SERIALIZED_RESULTS_FILE );
-	$res                           = unserialize( $res );
-	$scholarPublicationsCollection = new ScholarPublicationCollection();
+    // Get the content of the result file
+    $res                           = file_get_contents( SERIALIZED_RESULTS_FILE );
+    $res                           = unserialize( $res );
+    $scholarPublicationsCollection = new ScholarPublicationCollection();
 
-	// Ensure that the result is a ScholarAuthorCollection object
-	if ( ! ( $res instanceof ScholarAuthorCollection ) ) {
-		return null;
-	}
+    // Ensure that the result is a ScholarAuthorCollection object
+    if ( ! ( $res instanceof ScholarAuthorCollection ) ) {
+        return null;
+    }
 
-	// Add all the publications of all the users to the collection
-	foreach ( $res as $scholarUser ) {
+    // Add all the publications of all the users to the collection
+    foreach ( $res as $scholarUser ) {
 
-		$publications = $scholarUser->publications->values();
+        $publications = $scholarUser->publications->values();
 
-		// Filter the publications if a search is passed
-		// The search should be done like it would be with a search engine
-		if ( ! empty( $searchQuery ) ) {
-			$publications = array_filter( $publications,
-				function ( ScholarPublication $scholarPublication ) use ( $searchQuery, $scholarUser ) {
-					$publicationTitle   = $scholarPublication->title ?? '';
-					$publicationDesc    = $scholarPublication->abstract ?? '';
-					$publicationAuthors = $scholarPublication->author ?? '';
-					$publicationAuthors .= isset( $scholarUser->name ) ? ' ' . $scholarUser->name : '';
-					$publicationYear    = $scholarPublication->pub_year ?? '';
-					$authorInterests    = $scholarUser->interests ?? [];
+        // Filter the publications if a search is passed
+        // The search should be done like it would be with a search engine
+        if ( ! empty( $searchQuery ) ) {
+            $publications = array_filter( $publications,
+                function ( ScholarPublication $scholarPublication ) use ( $searchQuery, $scholarUser ) {
+                    $publicationTitle   = $scholarPublication->title ?? '';
+                    $publicationDesc    = $scholarPublication->abstract ?? '';
+                    $publicationAuthors = $scholarPublication->author ?? '';
+                    $publicationAuthors .= isset( $scholarUser->name ) ? ' ' . $scholarUser->name : '';
+                    $publicationYear    = $scholarPublication->pub_year ?? '';
+                    $authorInterests    = $scholarUser->interests ?? [];
 
-					// We will test all the search terms in the publication title, description, authors and author interests
-					$searchTerms = [ $searchQuery, ...explode( ' ', $searchQuery ) ];
+                    // We will test all the search terms in the publication title, description, authors and author interests
+                    $searchTerms = [ $searchQuery, ...explode( ' ', $searchQuery ) ];
 
-					// Search case insensitive, not depending accents and special characters
-					$publicationTitle   = remove_accents( strtolower( $publicationTitle ) );
-					$publicationDesc    = remove_accents( strtolower( $publicationDesc ) );
-					$publicationAuthors = remove_accents( strtolower( $publicationAuthors ) );
-					$authorInterests    = array_map( function ( $interest ) {
-						return remove_accents( strtolower( $interest ) );
-					}, $authorInterests );
+                    // Search case insensitive, not depending accents and special characters
+                    $publicationTitle   = remove_accents( strtolower( $publicationTitle ) );
+                    $publicationDesc    = remove_accents( strtolower( $publicationDesc ) );
+                    $publicationAuthors = remove_accents( strtolower( $publicationAuthors ) );
+                    $authorInterests    = array_map( function ( $interest ) {
+                        return remove_accents( strtolower( $interest ) );
+                    }, $authorInterests );
 
 
-					// Searching
-					foreach ( $searchTerms as $searchTerm ) {
-						$searchTerm = remove_accents( strtolower( $searchTerm ) );
+                    // Searching
+                    foreach ( $searchTerms as $searchTerm ) {
+                        $searchTerm = remove_accents( strtolower( $searchTerm ) );
 
-						// If the search term is found in the publication title, description, authors or author interests, we return true
-						if (
-							false !== strpos( $publicationTitle, $searchTerm )
-							|| false !== strpos( $publicationDesc, $searchTerm )
-							|| false !== strpos( $publicationAuthors, $searchTerm )
-							|| false !== strpos( $publicationYear, $searchTerm )
-							|| ! empty( array_filter( $authorInterests, function ( $interest ) use ( $searchTerm ) {
-								return false !== strpos( $interest, $searchTerm );
-							} ) )
-						) {
-							// If the publication author does not contain the user name, we add it at the beginning of the publication name
-							if ( empty( $scholarPublication->author ) ) {
-								$scholarPublication->author = $scholarUser->name;
-							} elseif ( ! str_contains( $scholarPublication->author, $scholarUser->name ) ) {
-								$scholarPublication->author = $scholarUser->name . ' and ' . $scholarPublication->author;
-							}
+                        // If the search term is found in the publication title, description, authors or author interests, we return true
+                        if (
+                            false !== strpos( $publicationTitle, $searchTerm )
+                            || false !== strpos( $publicationDesc, $searchTerm )
+                            || false !== strpos( $publicationAuthors, $searchTerm )
+                            || false !== strpos( $publicationYear, $searchTerm )
+                            || ! empty( array_filter( $authorInterests, function ( $interest ) use ( $searchTerm ) {
+                                return false !== strpos( $interest, $searchTerm );
+                            } ) )
+                        ) {
+                            // If the publication author does not contain the user name, we add it at the beginning of the publication name
+                            if ( empty( $scholarPublication->author ) ) {
+                                $scholarPublication->author = $scholarUser->name;
+                            } elseif ( ! str_contains( $scholarPublication->author, $scholarUser->name ) ) {
+                                $scholarPublication->author = $scholarUser->name . ' and ' . $scholarPublication->author;
+                            }
 
-							return true;
-						}
-					}
+                            return true;
+                        }
+                    }
 
-					return false;
-				}
-			);
-		} else {
-			// If the publication author does not contain the user name, we add it at the beginning of the publication name
-			foreach ( $publications as $publication ) {
-				if ( empty( $publication->author ) ) {
-					$publication->author = $scholarUser->name;
-				} elseif ( ! str_contains( $publication->author, $scholarUser->name ) ) {
-					$publication->author = $scholarUser->name . ' and ' . $publication->author;
-				}
-			}
-		}
+                    return false;
+                }
+            );
+        } else {
+            // If the publication author does not contain the user name, we add it at the beginning of the publication name
+            foreach ( $publications as $publication ) {
+                if ( empty( $publication->author ) ) {
+                    $publication->author = $scholarUser->name;
+                } elseif ( ! str_contains( $publication->author, $scholarUser->name ) ) {
+                    $publication->author = $scholarUser->name . ' and ' . $publication->author;
+                }
+            }
+        }
 
-		$scholarPublicationsCollection->add( ...$publications );
-	}
+        $scholarPublicationsCollection->add( ...$publications );
+    }
 
-	return $scholarPublicationsCollection;
+    return $scholarPublicationsCollection;
 }

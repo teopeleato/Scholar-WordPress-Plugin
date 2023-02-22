@@ -72,18 +72,18 @@ define( 'DEFAULT_PAPERS_SORT_DIRECTION', 'desc' );
  * @since 1.1.0
  */
 define( 'PAPERS_DISPLAY_TYPES', [
-	'list' => [
-		'template-file'         => 'PublicationListTemplate.php',
-		'name'                  => 'List',
-		'container-class'       => 'list',
-		'number-lines-abstract' => 0,
-	],
-	'card' => [
-		'template-file'         => 'PublicationCardTemplate.php',
-		'name'                  => 'Card',
-		'container-class'       => 'card',
-		'number-lines-abstract' => 6,
-	],
+    'list' => [
+        'template-file'         => 'PublicationListTemplate.php',
+        'name'                  => 'List',
+        'container-class'       => 'list',
+        'number-lines-abstract' => 0,
+    ],
+    'card' => [
+        'template-file'         => 'PublicationCardTemplate.php',
+        'name'                  => 'Card',
+        'container-class'       => 'card',
+        'number-lines-abstract' => 6,
+    ],
 
 ] );
 
@@ -93,8 +93,8 @@ define( 'PAPERS_DISPLAY_TYPES', [
  * @since 1.2.0
  */
 define( 'DEFAULT_NUMBER_LINES_ABSTRACT', array_combine(
-	array_keys( PAPERS_DISPLAY_TYPES ),
-	array_column( PAPERS_DISPLAY_TYPES, 'number-lines-abstract' )
+    array_keys( PAPERS_DISPLAY_TYPES ),
+    array_column( PAPERS_DISPLAY_TYPES, 'number-lines-abstract' )
 ) );
 
 
@@ -123,76 +123,76 @@ define( 'SEARCH_DELAY', 500 );
  * @since 1.0.0
  */
 define( 'CUSTOM_CRON_FREQUENCIES',
-	[
-		/*
-		 '1min'  => [
-			'interval' => MINUTE_IN_SECONDS,
-			'display'  => 'Every minute',
-		],
-		'5min'  => [
-			'interval' => 5 * MINUTE_IN_SECONDS,
-			'display'  => 'Every 5 minutes',
-		],
-		'10min' => [
-			'interval' => 10 * MINUTE_IN_SECONDS,
-			'display'  => 'Every 10 minutes',
-		],
-		'15min' => [
-			'interval' => 15 * MINUTE_IN_SECONDS,
-			'display'  => 'Every 15 minutes',
-		],
-		'30min' => [
-			'interval' => 30 * MINUTE_IN_SECONDS,
-			'display'  => 'Every 30 minutes',
-		],
-		*/
-	]
+    [
+        /*
+         '1min'  => [
+            'interval' => MINUTE_IN_SECONDS,
+            'display'  => 'Every minute',
+        ],
+        '5min'  => [
+            'interval' => 5 * MINUTE_IN_SECONDS,
+            'display'  => 'Every 5 minutes',
+        ],
+        '10min' => [
+            'interval' => 10 * MINUTE_IN_SECONDS,
+            'display'  => 'Every 10 minutes',
+        ],
+        '15min' => [
+            'interval' => 15 * MINUTE_IN_SECONDS,
+            'display'  => 'Every 15 minutes',
+        ],
+        '30min' => [
+            'interval' => 30 * MINUTE_IN_SECONDS,
+            'display'  => 'Every 30 minutes',
+        ],
+        */
+    ]
 );
 
 
 // On s'assure que la fonction get_editable_roles existe
 if ( ! function_exists( 'get_editable_roles' ) ) {
-	require_once ABSPATH . 'wp-admin/includes/user.php';
+    require_once ABSPATH . 'wp-admin/includes/user.php';
 }
 
 // On récupère les rôles éditables
 $roles = get_editable_roles();
 $roles = array_reverse(
-	array_combine(
-		array_keys( $roles ),
-		array_map(
-			static function ( $role ) {
-				return translate_user_role( $role['name'] );
-			},
-			$roles
-		)
-	)
+    array_combine(
+        array_keys( $roles ),
+        array_map(
+            static function ( $role ) {
+                return translate_user_role( $role['name'] );
+            },
+            $roles
+        )
+    )
 );
 
 
 // On s'assure que les intervals de cron personnalisés sont bien enregistrés
 if ( ! function_exists( 'scholar_scraper_add_custom_cron_intervals' ) ) {
-	require_once PLUGIN_DIR . 'src/Scheduling.php';
+    require_once PLUGIN_DIR . 'src/Scheduling.php';
 }
 
 $cronFrequencies = wp_get_schedules();
 // Sort cron frequencies by interval
 uasort(
-	$cronFrequencies,
-	static function ( $a, $b ) {
-		return $a['interval'] - $b['interval'];
-	}
+    $cronFrequencies,
+    static function ( $a, $b ) {
+        return $a['interval'] - $b['interval'];
+    }
 );
 // On récupère les fréquences de cron définies par WordPress
 $cronFrequencies = array_combine(
-	array_keys( $cronFrequencies ),
-	array_map(
-	// On récupère les noms affichable des fréquences (valeurs "display" du tableau)
-		static function ( $frequency ) {
-			return $frequency['display'];
-		},
-		$cronFrequencies
-	)
+    array_keys( $cronFrequencies ),
+    array_map(
+    // On récupère les noms affichable des fréquences (valeurs "display" du tableau)
+        static function ( $frequency ) {
+            return $frequency['display'];
+        },
+        $cronFrequencies
+    )
 
 );
 
@@ -202,69 +202,69 @@ $cronFrequencies = array_combine(
  * @since 1.0.0
  */
 define( 'PLUGIN_SETTINGS',
-	[
-		'RESEARCHERS_ROLES'   => [
-			'name'        => 'researchers_roles',
-			'label'       => 'Role of researchers',
-			'description' => 'The role(s) of the researchers on the website. This role(s) will be used to determine which users will have their articles retrieved from Google Scholar.',
-			'type'        => 'multiselect',
-			'options'     => $roles,
-		],
-		'META_KEY_SCHOLAR_ID' => [
-			'name'        => 'meta_key_scholar_id',
-			'label'       => 'Metadata key associated to the Google Scholar ID',
-			'description' => 'The metadata key used to store the scholar ID of a user.',
-			'type'        => 'text',
-			'pattern'     => '^.+$',
-			'default'     => 'scholar_id',
-			'placeholder' => 'Ex: scholar_id',
-		],
-		'PYTHON_API_THREADS'  => [
-			'name'        => 'python_api_threads',
-			'label'       => 'Number of threads',
-			'description' => 'The number of threads to use when scraping papers.',
-			'type'        => 'number',
-			'pattern'     => '^[1-9]([0-9])*$',
-			'default'     => 10,
-			'placeholder' => 'Ex: 10',
-			'min'         => 1,
-		],
-		'CRON_FREQUENCY'      => [
-			'name'        => 'cron_frequency',
-			'label'       => 'Cron frequency',
-			'description' => 'The frequency at which the cron will run.',
-			'type'        => 'select',
-			'options'     => $cronFrequencies,
-		],
-		'CRON_RETRY_AFTER'    => [
-			'name'        => 'cron_retry_after',
-			'label'       => 'Retry interval',
-			'description' => 'The number of minutes to wait before retrying to scrape papers that failed to be scraped.',
-			'type'        => 'number',
-			'pattern'     => '^[1-9]([0-9])*$',
-			'default'     => 5,
-			'placeholder' => 'Ex: 10',
-			'min'         => 5,
-		],
-		'PYTHON_PATH'         => [
-			'name'        => 'python_path',
-			'label'       => 'Python Path',
-			'description' => 'The path to the Python executable on your server.',
-			'type'        => 'text',
-			'pattern'     => '^.+$',
-			'default'     => '/usr/bin/python3',
-			'placeholder' => 'Ex: /usr/bin/python3',
-		],
-		'PIP_PATH'            => [
-			'name'        => 'pip_path',
-			'label'       => 'Pip Path',
-			'description' => 'The path to the Pip executable on your server.',
-			'type'        => 'text',
-			'pattern'     => '^.+$',
-			'default'     => '/usr/bin/pip3',
-			'placeholder' => 'Ex: /usr/bin/pip3',
-		],
-	]
+    [
+        'RESEARCHERS_ROLES'   => [
+            'name'        => 'researchers_roles',
+            'label'       => 'Role of researchers',
+            'description' => 'The role(s) of the researchers on the website. This role(s) will be used to determine which users will have their articles retrieved from Google Scholar.',
+            'type'        => 'multiselect',
+            'options'     => $roles,
+        ],
+        'META_KEY_SCHOLAR_ID' => [
+            'name'        => 'meta_key_scholar_id',
+            'label'       => 'Metadata key associated to the Google Scholar ID',
+            'description' => 'The metadata key used to store the scholar ID of a user.',
+            'type'        => 'text',
+            'pattern'     => '^.+$',
+            'default'     => 'scholar_id',
+            'placeholder' => 'Ex: scholar_id',
+        ],
+        'PYTHON_API_THREADS'  => [
+            'name'        => 'python_api_threads',
+            'label'       => 'Number of threads',
+            'description' => 'The number of threads to use when scraping papers.',
+            'type'        => 'number',
+            'pattern'     => '^[1-9]([0-9])*$',
+            'default'     => 10,
+            'placeholder' => 'Ex: 10',
+            'min'         => 1,
+        ],
+        'CRON_FREQUENCY'      => [
+            'name'        => 'cron_frequency',
+            'label'       => 'Cron frequency',
+            'description' => 'The frequency at which the cron will run.',
+            'type'        => 'select',
+            'options'     => $cronFrequencies,
+        ],
+        'CRON_RETRY_AFTER'    => [
+            'name'        => 'cron_retry_after',
+            'label'       => 'Retry interval',
+            'description' => 'The number of minutes to wait before retrying to scrape papers that failed to be scraped.',
+            'type'        => 'number',
+            'pattern'     => '^[1-9]([0-9])*$',
+            'default'     => 5,
+            'placeholder' => 'Ex: 10',
+            'min'         => 5,
+        ],
+        'PYTHON_PATH'         => [
+            'name'        => 'python_path',
+            'label'       => 'Python Path',
+            'description' => 'The path to the Python executable on your server.',
+            'type'        => 'text',
+            'pattern'     => '^.+$',
+            'default'     => '/usr/bin/python3',
+            'placeholder' => 'Ex: /usr/bin/python3',
+        ],
+        'PIP_PATH'            => [
+            'name'        => 'pip_path',
+            'label'       => 'Pip Path',
+            'description' => 'The path to the Pip executable on your server.',
+            'type'        => 'text',
+            'pattern'     => '^.+$',
+            'default'     => '/usr/bin/pip3',
+            'placeholder' => 'Ex: /usr/bin/pip3',
+        ],
+    ]
 );
 
 

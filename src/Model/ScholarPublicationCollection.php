@@ -8,19 +8,19 @@ namespace Model;
  */
 class ScholarPublicationCollection extends GenericCollection {
 
-	/**
-	 * @var string The class of the items in the collection.
-	 */
-	public static $itemClass = ScholarPublication::class;
+    /**
+     * @var string The class of the items in the collection.
+     */
+    public static $itemClass = ScholarPublication::class;
 
 
-	/**
-	 * Constructor.
-	 *
-	 * @param ScholarPublication ...$publications The publications to add to the collection.
-	 */
-	public function __construct( ScholarPublication ...$publications ) {
-		parent::__construct( ...$publications );
-	}
+    /**
+     * Constructor.
+     *
+     * @param ScholarPublication ...$publications The publications to add to the collection.
+     */
+    public function __construct( ScholarPublication ...$publications ) {
+        parent::__construct( ...$publications );
+    }
 
 }

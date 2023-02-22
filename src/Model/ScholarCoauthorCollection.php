@@ -8,19 +8,19 @@ namespace Model;
  */
 class ScholarCoauthorCollection extends GenericCollection {
 
-	/**
-	 * @var string The class of the items in the collection.
-	 */
-	public static $itemClass = ScholarCoauthor::class;
+    /**
+     * @var string The class of the items in the collection.
+     */
+    public static $itemClass = ScholarCoauthor::class;
 
 
-	/**
-	 * Constructor.
-	 *
-	 * @param ScholarCoauthor ...$coauthors The coauthors to add to the collection.
-	 */
-	public function __construct( ScholarCoauthor ...$coauthors ) {
-		parent::__construct( ...$coauthors );
-	}
+    /**
+     * Constructor.
+     *
+     * @param ScholarCoauthor ...$coauthors The coauthors to add to the collection.
+     */
+    public function __construct( ScholarCoauthor ...$coauthors ) {
+        parent::__construct( ...$coauthors );
+    }
 
 }
