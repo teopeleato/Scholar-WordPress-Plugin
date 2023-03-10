@@ -26,7 +26,7 @@ abstract class LOG_TYPE {
 
 /**
  * Fonction pour récupérer les paramètres du plugin ou les valeurs par défaut si ils ne sont pas encore définis.
- * @return false|mixed|null Les paramètres du plugin ou les valeurs par défaut si ils ne sont pas encore définis.
+ * @return array|false|null Les paramètres du plugin ou les valeurs par défaut si ils ne sont pas encore définis.
  * @since 1.0.0
  */
 function scholar_scraper_get_settings_or_default() {
@@ -75,7 +75,7 @@ function scholar_scraper_set_default_settings(): void {
  * @return mixed Valeur du paramètre ou valeur par défaut si le paramètre n'est pas défini.
  * @since 1.0.0
  */
-function scholar_scraper_get_setting_value( string $setting_acronym ): mixed {
+function scholar_scraper_get_setting_value( string $setting_acronym ) {
     $settings = get_option( OPTION_GROUP );
 
     if ( ! isset( PLUGIN_SETTINGS[ $setting_acronym ] ) ) {

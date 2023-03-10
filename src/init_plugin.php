@@ -153,9 +153,9 @@ function add_scholar_scraper_menu() {
 /**
  * Adds items to the plugin's action links on the Plugins listing screen.
  *
- * @param array<string,string> $plugin_actions Array of action links.
+ * @param array $plugin_actions Array of action links.
  * @param string $plugin_file Path to the plugin file relative to the plugins directory.
- * @param mixed[] $plugin_data An array of plugin data.
+ * @param array $plugin_data An array of plugin data.
  * @param string $context The plugin context.
  *
  * @return array<string,string> Array of action links.

@@ -67,7 +67,7 @@ function scholar_scraper_add_custom_cron_intervals( array $schedules = [] ): arr
  * @see https://developer.wordpress.org/reference/functions/wp_schedule_event/
  * @since 1.0.0
  */
-function scholar_scraper_schedule_event( string $startingTime = "", string $frequency = "", string $hook = CRON_HOOK_NAME, array $args = [] ): mixed {
+function scholar_scraper_schedule_event( string $startingTime = "", string $frequency = "", string $hook = CRON_HOOK_NAME, array $args = [] ) {
 
     // Si pas de timestamp de début, on calcule le timestamp de début en fonction de l'heure actuelle et de la fréquence
     if ( empty( $startingTime ) || ! is_numeric( $startingTime ) ) {
@@ -97,7 +97,7 @@ function scholar_scraper_schedule_event( string $startingTime = "", string $freq
  * @see https://developer.wordpress.org/reference/functions/wp_clear_scheduled_hook/
  * @since 1.0.0
  */
-function scholar_scraper_unschedule_event( string $hookName = CRON_HOOK_NAME ): mixed {
+function scholar_scraper_unschedule_event( string $hookName = CRON_HOOK_NAME ) {
     // Check if the event is scheduled
     if ( ! wp_get_scheduled_event( $hookName ) ) {
         return false;
@@ -117,7 +117,7 @@ function scholar_scraper_unschedule_event( string $hookName = CRON_HOOK_NAME ): 
  * @see scholar_scraper_schedule_event()
  * @since 1.0.0
  */
-function scholar_scraper_update_schedule_event( string $new_frequency = null, string $startingTime = null ): mixed {
+function scholar_scraper_update_schedule_event( string $new_frequency = null, string $startingTime = null ) {
 
     // Get the default value if not set
     if ( empty( $new_frequency ) ) {

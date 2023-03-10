@@ -194,7 +194,7 @@ function scholar_scraper_register_fields_settings(): void {
  * @return mixed|null Valeur par défaut du paramètre ou null si l'acronyme n'existe pas.
  * @since 1.0.0
  */
-function scholar_scraper_get_default_value( string $setting_acronym ): mixed {
+function scholar_scraper_get_default_value( string $setting_acronym ) {
     if ( ! isset( PLUGIN_SETTINGS[ $setting_acronym ] ) ) {
         return null;
     }

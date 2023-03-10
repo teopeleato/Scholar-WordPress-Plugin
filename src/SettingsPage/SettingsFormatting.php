@@ -32,7 +32,7 @@ function scholar_scraper_display_settings_form() {
  * @return void
  * @since 1.0.0
  */
-function scholar_scraper_do_settings_sections_tabs( $page ) {
+function scholar_scraper_do_settings_sections_tabs( string $page ) {
 
     global $wp_settings_sections, $wp_settings_fields;
 
