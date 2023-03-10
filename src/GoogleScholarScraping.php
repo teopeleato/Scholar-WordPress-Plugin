@@ -175,7 +175,7 @@ function scholar_scraper_on_cron_exec_error( string $message = null ) {
  * @throws ReflectionException Si une erreur survient lors de la récupération des objets.
  * @since 1.0.0
  */
-function scholar_scraper_display_result( mixed $atts ): string {
+function scholar_scraper_display_result( $atts ): string {
 
     // Get the attributes passed to the shortcode
     $atts = shortcode_atts(

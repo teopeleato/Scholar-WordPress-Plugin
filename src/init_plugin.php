@@ -233,7 +233,7 @@ function scholar_scraper_display_settings_page() {
  * @return void
  * @since 1.0.0
  */
-function scholar_scraper_on_settings_update( string $option, mixed $old_value, mixed $new_value ) {
+function scholar_scraper_on_settings_update( string $option, $old_value, $new_value ) {
     if ( ! current_user_can( 'manage_options' ) ) {
         return;
     }

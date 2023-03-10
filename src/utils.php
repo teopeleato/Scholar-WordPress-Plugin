@@ -336,7 +336,7 @@ function scholar_scraper_log( string $logType, string $message ): bool {
  * @throws ReflectionException If the class doesn't exist.
  * @since 1.0.0
  */
-function scholar_scraper_cast_object_to_class( mixed $object, string $class ) {
+function scholar_scraper_cast_object_to_class( $object, string $class ) {
 
     if ( ! class_exists( $class ) ) {
         return "Class $class doesn't exist";
