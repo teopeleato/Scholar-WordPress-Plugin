@@ -6,11 +6,6 @@
  */
 function scholar_scraper_register_fields_settings(): void {
 
-    // Ensure that the settings are registered only once
-    if ( get_option( OPTION_GROUP ) ) {
-        return;
-    }
-
     $patternForFieldDescription = '<p class="field-description">%s</p>';
 
     // On enregistre les paramètres du plugin
