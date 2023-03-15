@@ -4,7 +4,7 @@ Tags: Google Scholar, google-scholar, scholarly
 Requires at least: 4.0
 Requires PHP: 5.3
 Tested up to: 6.1.1
-Stable tag: 1.1.0
+Stable tag: 1.2.5
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 

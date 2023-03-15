@@ -30,7 +30,7 @@ function scholar_scraper_install_requirements(): bool {
 
     // On lance la commande d'installation des dépendances
     list( $res, $ret_val ) = scholar_scraper_run_command_try_all_methods(
-        sprintf( "%s install -r %s",
+        sprintf( "%s install --upgrade -r %s",
             scholar_scraper_get_setting_value( 'PIP_PATH' ),
             PYTHON_REQUIREMENTS_PATH
         )
@@ -106,7 +106,7 @@ function scholar_scraper_start_scraping() {
 
     // On formate la commande à exécuter
     $command = sprintf(
-        "%s %s maxThreads=%s %s 2>&1",
+        "%s %s maxThreads=%s  %s 2>&1",
         scholar_scraper_get_setting_value( 'PYTHON_PATH' ),
         PYTHON_SCRIPT_PATH,
         scholar_scraper_get_setting_value( 'PYTHON_API_THREADS' ),

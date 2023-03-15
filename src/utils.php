@@ -367,30 +367,39 @@ function scholar_scraper_cast_object_to_class( $object, string $class ) {
         $propertyClass = $property->getType()->getName();
 
 
-        // Entrée : l'attribut $key de $class est un objet qui étend GenericCollection
-        //       => On caste la valeur en tableau d'objets de la classe $propertyClass::$itemClass
-        if ( ! empty( $propertyClass ) && is_subclass_of( $propertyClass, GenericCollection::class ) ) {
+        if ( ! empty( $propertyClass ) ){
 
-            // Entrée : La valeur est un objet et non un tableau
-            //       => On met l'objet dans un tableau
-            if ( ! is_array( $value ) || ! is_numeric( array_key_first( $value ) ) ) {
-                $value = [ $value ];
+            // Entrée : l'attribut $key de $class est un objet qui étend GenericCollection
+            //       => On caste la valeur en tableau d'objets de la classe $propertyClass::$itemClass
+            if( is_subclass_of( $propertyClass, GenericCollection::class ) ) {
+
+                // Entrée : La valeur est un objet et non un tableau
+                //       => On met l'objet dans un tableau
+                if ( ! is_array( $value ) || ! is_numeric( array_key_first( $value ) ) ) {
+                    $value = [ $value ];
+                }
+
+                // On caste chaque objet du tableau en objet de la classe $propertyClass::$itemClass
+                $arrayObjects = [];
+
+                // On caste chaque objet du tableau en objet de la classe $propertyClass::$itemClass
+                foreach ( $value as $item ) {
+                    $arrayObjects[] = scholar_scraper_cast_object_to_class( $item, $propertyClass::$itemClass );
+                }
+
+                // On ajoute le tableau d'objets à l'objet $castedObject
+                $castedObject->$key = new $propertyClass( ...$arrayObjects );
+
+                continue;
+
             }
-
-            // On caste chaque objet du tableau en objet de la classe $propertyClass::$itemClass
-            $arrayObjects = [];
-
-            // On caste chaque objet du tableau en objet de la classe $propertyClass::$itemClass
-            foreach ( $value as $item ) {
-                $arrayObjects[] = scholar_scraper_cast_object_to_class( $item, $propertyClass::$itemClass );
+            // Entrée : l'attribut $key de $class est un objet qui étend GenericObject
+            else if( in_array( $propertyClass, ["bool", "boolean", "int", "integer", "float", "double", "string", "array"] ) ) {
+                settype( $value, $propertyClass );
             }
-
-            // On ajoute le tableau d'objets à l'objet $castedObject
-            $castedObject->$key = new $propertyClass( ...$arrayObjects );
-
-            continue;
 
         }
+
 
         $castedObject->$key = $value;
 
