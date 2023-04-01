@@ -32,6 +32,9 @@ add_action( 'init', 'scholar_scraper_custom_block_script_register', PLUGIN_PRIOR
 add_action( 'wp_ajax_search_in_papers', 'scholar_scraper_search_in_papers' );
 add_action( 'wp_ajax_nopriv_search_in_papers', 'scholar_scraper_search_in_papers' );
 
+// Admin notices actions
+add_action( 'admin_notices', 'scholar_scraper_admin_notices' );
+
 
 /**
  * Fonction qui gère les fichiers à inclure pour initialiser le plugin.
@@ -421,4 +424,14 @@ function scholar_scraper_search_in_papers() {
     $attrs['search_query'] = $query;
 
     wp_send_json_success( scholar_scraper_block_render_callback( $attrs ) );
+}
+
+/**
+ * Méthode pour afficher les messages d'erreur.
+ *
+ * @return void
+ * @since 1.0.0
+ */
+function scholar_scraper_admin_notices(): void {
+    settings_errors();
 }
