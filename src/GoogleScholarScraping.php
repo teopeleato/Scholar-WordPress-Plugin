@@ -83,12 +83,9 @@ function scholar_scraper_start_scraping() {
     // Get all the users that are defined as researchers
     $scholarUsers = [];
 
-    foreach ( scholar_scraper_get_setting_value( 'RESEARCHERS_ROLES' ) as $role ) {
-        $scholarUsers = array_merge(
-            $scholarUsers,
-            scholar_scraper_get_list_meta_key( $role, scholar_scraper_get_setting_value( 'META_KEY_SCHOLAR_ID' ) )
-        );
-    }
+    
+    $scholarUsers =scholar_scraper_get_setting_value( 'META_KEY_SCHOLAR_ID' );
+    
 
     // On vérifie qu'on a bien récupéré des utilisateurs
     if ( ! count( $scholarUsers ) ) {
